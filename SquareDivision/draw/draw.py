@@ -18,11 +18,11 @@ def ax_settings(ax: Axes):
 
 def struc_arr(arr : np.ndarray, 
               dtype = [
-                  ('x', float), 
-                  ('y',float), 
-                  ('width', float), 
-                  ('height', float), 
-                  ('area', float)]
+                ('x', float), 
+                ('y',float), 
+                ('width', float), 
+                ('height', float),
+                ('area', float)]
 ):  
     """ help in clear rectangles drawing """
     values = list(map(tuple, arr[:,:5]))

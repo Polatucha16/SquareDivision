@@ -77,3 +77,10 @@ def area_constraint_fun(x:np.ndarray, columns = 4):
     arr:np.ndarray = x.reshape(-1, columns)
     width, height =  arr[:,2], arr[:,3]
     return width.dot(height) - 1
+
+def area_jac(x:np.ndarray, columns = 4):
+    """ Calculates the JAcobina of area_constraint_fun at x"""
+    arr:np.ndarray = x.reshape(-1, columns)
+    jac:np.ndarray = np.zeros(shape=arr.shape)
+    jac[:,2:] = arr[:,[3,2]]
+    return jac.flatten()

@@ -325,19 +325,19 @@ def walls_in_scaled_view(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray):
     return suspended_walls[have_intersection, 0], intersections[have_intersection]
 
     
-def homogeneous_scale_in_dir(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray, ):
-    """ Return maximal homogeneous scaling of rectangle avoiding suspened walls in direction <dir>.
-        Arguments 
-            rect            :   np.ndarray (x, y, width, height, ...)
-            dir             :   one of ['l', 'r', 'u', 'd']
-            suspended_walls :   np.ndarray (N, 3) representing
-                (x, y_min, y_max) vertical   interval from (x, y_min) to (x, y_max)
-                    or
-                (y, x_min, x_max) horizontal interval from (y, x_min) to (y, x_max)
-    """
-    idx = wall_axis(dir)
-    x, y, width, heigth = rect[:4]
-    mid_pt = np.array([x + width/2, y + heigth/2])
+# def homogeneous_scale_in_dir(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray, ):
+#     """ Return maximal homogeneous scaling of rectangle avoiding suspened walls in direction <dir>.
+#         Arguments 
+#             rect            :   np.ndarray (x, y, width, height, ...)
+#             dir             :   one of ['l', 'r', 'u', 'd']
+#             suspended_walls :   np.ndarray (N, 3) representing
+#                 (x, y_min, y_max) vertical   interval from (x, y_min) to (x, y_max)
+#                     or
+#                 (y, x_min, x_max) horizontal interval from (y, x_min) to (y, x_max)
+#     """
+#     idx = wall_axis(dir)
+#     x, y, width, heigth = rect[:4]
+#     mid_pt = np.array([x + width/2, y + heigth/2])
 
 barge_mode = Literal['scale', 'push']
 def homogeneous_scale_in_dir_search(rect_num:int, rect_arr:np.ndarray, dir:mode, scale_or_push:barge_mode):

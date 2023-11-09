@@ -17,15 +17,14 @@ def ax_settings(ax: Axes):
     return ax
 
 def struc_arr(arr : np.ndarray, 
-              dtype = [
-                ('x', float), 
+              dtype = 
+               [('x', float), 
                 ('y',float), 
                 ('width', float), 
-                ('height', float),
-                ('area', float)]
+                ('height', float)]
 ):  
     """ help in clear rectangles drawing """
-    values = list(map(tuple, arr[:,:5]))
+    values = list(map(tuple, arr[:,:4]))
     return np.array(values, dtype=dtype)
 
 def draw_rectangles(ax:Axes, arr: np.ndarray, marked:int=False , stop:int=False):
@@ -49,6 +48,12 @@ def draw_rectangles(ax:Axes, arr: np.ndarray, marked:int=False , stop:int=False)
     ax.hlines([0,1], xmin=0, xmax=1)
     # ax.plot(*walls_to_plot.T, lw=1, c='tab:orange')
     
+    return ax
+
+def rectangle_numbers(ax:Axes, arr: np.ndarray):
+    for i, rect in enumerate(arr):
+        x, y = rect[:2]
+        ax.text(x, y, str(i), horizontalalignment='left', verticalalignment='bottom',)
     return ax
 
 def draw_suspended_walls(ax:Axes, dir, sus_walls):

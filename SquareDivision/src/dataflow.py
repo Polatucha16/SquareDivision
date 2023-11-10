@@ -3,6 +3,10 @@ from typing import Callable
 
 from SquareDivision.src.morph import homogeneus_push_all, wall_push
 from SquareDivision.src.regions import homogeneous_scale_in_dir_search
+from SquareDivision.contact_graph.incidence_matrix import (
+    contact_graph_incidence_matrix
+)
+from SquareDivision.holes.detect import find_holes
 
 def arg_rect_list(n, pts_func, sizes_func, rng):
     """ Return an np.ndarray (n,5) with rows of the form:
@@ -142,10 +146,24 @@ def inflate_rectangles(arg_arr:np.ndarray):
             arr[i,:4] = np.array(wall_push(arr[i, :4], push_scale, dir))
     return arr
 
+def graph_processing(clinched_rectangles):
+    east_neighbours = contact_graph_incidence_matrix(clinched_rectangles, 'r').astype(int)
+    north_neighbours=contact_graph_incidence_matrix(clinched_rectangles, 'u').astype(int)
+    holes = find_holes(clinched_rectangles, east_neighbours, north_neighbours)
+    return east_neighbours, north_neighbours, holes
+
 def process(arr: np.ndarray):
     arr = find_anchors_and_crop(arr)
     arr = sort_by_area(arr)
     arr = remove_smaller(arr)
-    pushed_arr = inflate_rectangles(arr)
+    clinched_rectangles = inflate_rectangles(arr)
+    east_neighbours, north_neighbours, holes = graph_processing(clinched_rectangles)
+    output = {
+        'arr' : arr,
+        'clinched_rectangles' : clinched_rectangles,
+        'east_neighbours' : east_neighbours,
+        'north_neighbours' : north_neighbours,
+        'holes' : holes
+    }
     
-    return arr, pushed_arr
+    return output

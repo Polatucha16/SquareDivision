@@ -71,16 +71,47 @@ def contact_constraint_args(
     contact_rhs = np.zeros(shape=(m,))
     return contact_arr, contact_rhs
 
+def contacts_after_hole_closing(x:np.ndarray, hole_closing_idxs:list):
+    """ Nonlinear constraint from closing hole between:
+            [i_X, j_X] or [n_Y, m_Y]
+        Arguments:
+            hole_closing_idxs = [[i_X, j_X], [n_Y, m_Y]]
+        Returns value of 
+        (X_right - X_left - width_left ) * (Y_top - X_down - height_down )
+        one of which should be zero in final rectangulation.
+        """
+    arr:np.ndarray = x.reshape(-1, 4)
+    idx_left, idx_right = hole_closing_idxs[0]
+    idx_down, idx___top = hole_closing_idxs[1]
+    diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
+    diff_Y = arr[idx___top, 0] - (arr[idx_down, 1] + arr[idx_down, 3])
+    return diff_X * diff_Y 
+
+def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
+    arr:np.ndarray = x.reshape(-1, 4)
+    jac_arr = np.zeros(shape=arr.shape)
+    idx_left, idx_right = hole_closing_idxs[0]
+    idx_down, idx___top = hole_closing_idxs[1]
+    diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
+    diff_Y = arr[idx___top, 0] - (arr[idx_down, 1] + arr[idx_down, 3])
+    jac_arr[idx_right, 0] = diff_Y
+    jac_arr[idx_left, 0] = -diff_Y
+    jac_arr[idx_left, 2] = -diff_Y
+    jac_arr[idx___top, 1] = diff_X
+    jac_arr[idx_down, 1] = -diff_X
+    jac_arr[idx_down, 3] = -diff_X
+    return jac_arr.flatten()
+
 def area_constraint_fun(x:np.ndarray, columns = 4):
     """ Nonlinear constraints
         argument x is flattened array of shape <clinched_rectangles>"""
     arr:np.ndarray = x.reshape(-1, columns)
     width, height =  arr[:,2], arr[:,3]
-    return width.dot(height) - 1
+    return 1 - width.dot(height)
 
 def area_jac(x:np.ndarray, columns = 4):
-    """ Calculates the JAcobina of area_constraint_fun at x"""
+    """ Calculates the jacobian of area_constraint_fun at x"""
     arr:np.ndarray = x.reshape(-1, columns)
     jac:np.ndarray = np.zeros(shape=arr.shape)
     jac[:,2:] = arr[:,[3,2]]
-    return jac.flatten()
+    return -jac.flatten()

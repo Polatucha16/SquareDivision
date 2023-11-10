@@ -44,7 +44,7 @@ def numers_of_contacting_rectangles_in_dir(rect_num:int, clinched_rectangles:np.
     contact_row[contact_numbers] = np.ones(shape=(number_of_contacts,))
     return contact_row
 
-def contact_graph_incidence_matrix(clinched_rectangles, dir):
+def contact_graph_incidence_matrix(clinched_rectangles, dir) -> np.ndarray:
     rows = []
     for i, rect in enumerate(clinched_rectangles):
         rows.append(numers_of_contacting_rectangles_in_dir(

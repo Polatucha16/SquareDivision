@@ -2,6 +2,7 @@ import functools
 
 import numpy as np
 from numpy.random._generator import Generator
+from scipy.optimize import minimize
 
 import matplotlib.pyplot as plt
 
@@ -17,6 +18,8 @@ from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs
+from SquareDivision.optimization.constraints import constraints_trust_constr
+from SquareDivision.optimization.objective_function import dist_fun
 from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
 from SquareDivision.config import config
 
@@ -66,5 +69,28 @@ class Rectangulation():
     
     def prepare_constraints(self):
         self.holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
-
-
+        self.const_trust = constraints_trust_constr(
+            self.clinched_rectangles[:,:4], 
+            self.east_neighbours, 
+            self.north_neighbours,
+            self.holes_idxs
+        )
+    def close_holes(self):
+        self.sol = minimize(
+            dist_fun, 
+            x0=self.clinched_rectangles[:,:4].flatten(), 
+            args=(self.clinched_rectangles[:,:4]), 
+            jac=True, 
+            method='trust-constr', 
+            constraints=self.const_trust)
+    
+    def draw_closed(self):
+        self.closed = self.sol.x.reshape(-1,4)
+        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
+        axes[0] = draw_rectangles(axes[0], self.arr[:,:4])
+        axes[0] = rectangle_numbers(axes[0],  self.arr[:,:4])
+        axes[1] = draw_rectangles(axes[1],  self.clinched_rectangles[:,:4])
+        axes[1] = rectangle_numbers(axes[1],  self.clinched_rectangles[:,:4])
+        axes[2] = draw_rectangles(axes[2], self.closed)
+        axes[2] = rectangle_numbers(axes[2],  self.closed)
+        plt.show()

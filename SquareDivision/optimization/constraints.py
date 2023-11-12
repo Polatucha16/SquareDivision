@@ -1,7 +1,8 @@
 import numpy as np
-from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
+from scipy.optimize import LinearConstraint, NonlinearConstraint
 
-from SquareDivision.holes.detect import find_holes
+from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
+# from SquareDivision.holes.detect import find_holes
 from SquareDivision.holes.detect import hole_closing_idxs
 
 def low_boundary_constraint_args(
@@ -155,3 +156,43 @@ def constraints_SLSQP(clinched_rectangles:np.ndarray, east_neighbours, north_nei
         }
     )
     return constr_list
+
+def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbours, idxs_to_close):
+    # boundary rectangles constraints
+    low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    high_Y_A, high_Y_rhs = high_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    low__X_constr = LinearConstraint( A=low__X_A, lb=low__X_rhs, ub=low__X_rhs)
+    low__Y_constr = LinearConstraint( A=low__Y_A, lb=low__Y_rhs, ub=low__Y_rhs)
+    high_X_constr = LinearConstraint( A=high_X_A, lb=high_X_rhs, ub=high_X_rhs)
+    high_Y_constr = LinearConstraint( A=high_Y_A, lb=high_Y_rhs, ub=high_Y_rhs)
+
+    # constacts from constact graphs
+    cont_X_A, cont_X_rhs = contact_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    cont_Y_A, cont_Y_rhs = contact_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs)
+    vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs)
+
+    # one of opposite walls of evry hole have to close
+    holes_constraints = []
+    for idx_pair in idxs_to_close:
+        holes_constraints.append(
+            NonlinearConstraint(
+                fun=lambda x, hole_closing_idxs=idx_pair : contacts_after_hole_closing(x, hole_closing_idxs),
+                jac=lambda x, hole_closing_idxs=idx_pair : hole_closing_jac(x, hole_closing_idxs),
+                lb=0, ub=0)
+        )
+
+    # area constraint forcing holes to close
+    area_constr = NonlinearConstraint(fun=area_constraint_fun, jac=area_jac, lb=0, ub=0)
+
+    constraints = [
+        low__X_constr, low__Y_constr,
+        high_X_constr, high_Y_constr,
+        horizontal_contacts,
+        vertical___contacts,
+        area_constr
+        ]
+    constraints.extend(holes_constraints)
+    return constraints

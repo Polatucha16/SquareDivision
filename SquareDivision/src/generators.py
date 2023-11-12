@@ -32,30 +32,32 @@ def uniform_pts(
     ymax: float = 1,
     rng: Generator = np.random.default_rng(config["seed"]),
 ):
-    """ Return (n*n, 2) np.ndarray:
+    """Return (n, 2) np.ndarray:
             sample of size n*n from uniform distribution
             in a rectangle (xmin, xmax) by (ymin, ymax)
-        Example:
-
-            import numpy as np
-            from numpy.random._generator import Generator
-            from SquareDivision.src.generators import uniform_pts
-            from SquareDivision.config import config, figure_settings, axis_settings
-            import matplotlib.pyplot as plt
-
-            rng:Generator = np.random.default_rng(config['seed'])
-            pts_centers = uniform_pts(5, rng=rng)
-
-            fig, ax = plt.subplots(**figure_settings)
-            ax.set(**axis_settings)
-            ax.scatter(*pts_centers.T, marker='.')
-            plt.show()
-
     """
-    pts = []
-    for i in range(n):
-        x = rng.uniform(low=xmin, high=xmax, size=n)
-        y = rng.uniform(low=ymin, high=ymax, size=n)
-        curr_pts = np.vstack(tup=(x, y))
-        pts.append(curr_pts)
-    return np.hstack(pts).T
+    return rng.uniform([xmin, ymin], [xmax, ymax], size=(n, 2))
+
+    # """ Return (n*n, 2) np.ndarray:
+    #         sample of size n*n from uniform distribution
+    #         in a rectangle (xmin, xmax) by (ymin, ymax)
+    #     Example:
+    #         import numpy as np
+    #         from numpy.random._generator import Generator
+    #         from SquareDivision.src.generators import uniform_pts
+    #         from SquareDivision.config import config, figure_settings, axis_settings
+    #         import matplotlib.pyplot as plt
+    #         rng:Generator = np.random.default_rng(config['seed'])
+    #         pts_centers = uniform_pts(5, rng=rng)
+    #         fig, ax = plt.subplots(**figure_settings)
+    #         ax.set(**axis_settings)
+    #         ax.scatter(*pts_centers.T, marker='.')
+    #         plt.show()
+    # """
+    # pts = []
+    # for i in range(n):
+    #     x = rng.uniform(low=xmin, high=xmax, size=n)
+    #     y = rng.uniform(low=ymin, high=ymax, size=n)
+    #     curr_pts = np.vstack(tup=(x, y))
+    #     pts.append(curr_pts)
+    # return np.hstack(pts).T

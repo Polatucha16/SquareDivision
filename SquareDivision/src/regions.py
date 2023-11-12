@@ -22,11 +22,9 @@ def below_negative_slope(u: np.ndarray,v: np.ndarray,x: np.ndarray,y: np.ndarray
     return v <= -(h/w) * (u - x - w/2) + y+h/2
 
 # min(abs(push_rectangles[left(push_rectangles[:,5], push_rectangles[0,0], push_rectangles[0, 2]),:][:,0]-push_rectangles[0,0]))
+direction = Literal['l', 'r', 'u', 'd'] # left, right, up, down ( FIX to [left, right, up, down]? )
 
-# FIX to [left, right, up, down]
-mode = Literal['l', 'r', 'u', 'd'] # left, right, up, down
-
-def region_condition(x, y, w, h, dir: mode):
+def region_condition(x, y, w, h, dir: direction):
     """ For a rectangle R described by (x, y, w, h) return a function regionQ that
         yields True if points fed to it are are in the
         triangular region - the way of one of the sides (dir parameter) 
@@ -114,13 +112,13 @@ def region_condition(x, y, w, h, dir: mode):
         return result0.astype(int) * result1.astype(int)
     return regionQ
 
-def wall_axis(dir: mode):
+def wall_axis(dir: direction):
     idx = 0 if dir == 'l' or dir == 'r' else 1
     return idx
-def perp_axis(dir: mode):
+def perp_axis(dir: direction):
     return (wall_axis(dir)+1) % 2
 
-def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: mode):
+def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: direction):
     """ Return indices of and intervals representing walls opposed to <dir>:
             right walls for dir = 'l' (left), 
             upper walls for dir = d (down), and so on
@@ -263,7 +261,7 @@ def negative_diag(u:float, v:float, x:float, y:float, w:float, h:float):
     a, b = negative_diag_a_b(x, y, w, h)
     return np.dot(a, [u, v]) + b
 
-def walls_in_view(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray):
+def walls_in_view(rect:np.ndarray, dir:direction, suspended_walls:np.ndarray):
     """ Return those suspended walls which are in the push view from the rectangle rect
         Arguments
             suspended_walls :   np.ndarray (N, 3) representing
@@ -289,7 +287,7 @@ def walls_in_view(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray):
             )
     return suspended_walls[have_intersection, 0], intersections[have_intersection]
 
-def walls_in_scaled_view(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray):
+def walls_in_scaled_view(rect:np.ndarray, dir:direction, suspended_walls:np.ndarray):
     """ Return those suspended walls which have non-empty intersection with 
     triangular region spanned by <dir> wall with vertex at center of rectangle
     Arguments
@@ -324,25 +322,10 @@ def walls_in_scaled_view(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray):
             )
     return suspended_walls[have_intersection, 0], intersections[have_intersection]
 
-    
-# def homogeneous_scale_in_dir(rect:np.ndarray, dir:mode, suspended_walls:np.ndarray, ):
-#     """ Return maximal homogeneous scaling of rectangle avoiding suspened walls in direction <dir>.
-#         Arguments 
-#             rect            :   np.ndarray (x, y, width, height, ...)
-#             dir             :   one of ['l', 'r', 'u', 'd']
-#             suspended_walls :   np.ndarray (N, 3) representing
-#                 (x, y_min, y_max) vertical   interval from (x, y_min) to (x, y_max)
-#                     or
-#                 (y, x_min, x_max) horizontal interval from (y, x_min) to (y, x_max)
-#     """
-#     idx = wall_axis(dir)
-#     x, y, width, heigth = rect[:4]
-#     mid_pt = np.array([x + width/2, y + heigth/2])
-
-barge_mode = Literal['scale', 'push']
-def homogeneous_scale_in_dir_search(rect_num:int, rect_arr:np.ndarray, dir:mode, scale_or_push:barge_mode):
-    """ Return distance to the the first obstacle from arr
-        in <scaled_or_fixed> expanding of rectangle <rect>
+mode = Literal['scale', 'push']
+def homogeneous_scale_in_dir_search(rect_num:int, rect_arr:np.ndarray, dir:direction, scale_or_push:mode):
+    """ Return macimal scale to the the first obstacle from rect_arr
+        in <scale_or_push> expanding of rectangle <rect>
         in the direction <dir>.
     Arguments
         rect_num        :   number of rectangle in rectangle list
@@ -373,7 +356,3 @@ def homogeneous_scale_in_dir_search(rect_num:int, rect_arr:np.ndarray, dir:mode,
         dist_to_mid = np.abs(mid_pt[idx]-barrier_anchor)
         scale = 2 * dist_to_mid / [width, heigth][idx]
         return scale
-
-
-# FIX scaled_or_fixed type -> mode
-# FIX dir type to be direction

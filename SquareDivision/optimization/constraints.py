@@ -1,4 +1,8 @@
 import numpy as np
+from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
+
+from SquareDivision.holes.detect import find_holes
+from SquareDivision.holes.detect import hole_closing_idxs
 
 def low_boundary_constraint_args(
     clinched_rectangles:np.ndarray, 
@@ -61,7 +65,7 @@ def contact_constraint_args(
             x_k - x_i - w_i
         """
     n, cols = clinched_rectangles.shape
-    m = np.sum(upper_neighbours)
+    m = int(np.sum(upper_neighbours))
     contact_arr = np.zeros(shape=(m, cols * n))
     for contact_num, (low_neighbour, high_neighbour) in enumerate(zip(*np.where(upper_neighbours > 0))):
         # x_k - x_i - w_i
@@ -84,8 +88,8 @@ def contacts_after_hole_closing(x:np.ndarray, hole_closing_idxs:list):
     idx_left, idx_right = hole_closing_idxs[0]
     idx_down, idx___top = hole_closing_idxs[1]
     diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
-    diff_Y = arr[idx___top, 0] - (arr[idx_down, 1] + arr[idx_down, 3])
-    return diff_X * diff_Y 
+    diff_Y = arr[idx___top, 1] - (arr[idx_down, 1] + arr[idx_down, 3])
+    return np.array([diff_X * diff_Y])
 
 def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
     arr:np.ndarray = x.reshape(-1, 4)
@@ -93,7 +97,7 @@ def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
     idx_left, idx_right = hole_closing_idxs[0]
     idx_down, idx___top = hole_closing_idxs[1]
     diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
-    diff_Y = arr[idx___top, 0] - (arr[idx_down, 1] + arr[idx_down, 3])
+    diff_Y = arr[idx___top, 1] - (arr[idx_down, 1] + arr[idx_down, 3])
     jac_arr[idx_right, 0] = diff_Y
     jac_arr[idx_left, 0] = -diff_Y
     jac_arr[idx_left, 2] = -diff_Y
@@ -107,7 +111,7 @@ def area_constraint_fun(x:np.ndarray, columns = 4):
         argument x is flattened array of shape <clinched_rectangles>"""
     arr:np.ndarray = x.reshape(-1, columns)
     width, height =  arr[:,2], arr[:,3]
-    return 1 - width.dot(height)
+    return np.array([1 - width.dot(height)])
 
 def area_jac(x:np.ndarray, columns = 4):
     """ Calculates the jacobian of area_constraint_fun at x"""
@@ -115,3 +119,39 @@ def area_jac(x:np.ndarray, columns = 4):
     jac:np.ndarray = np.zeros(shape=arr.shape)
     jac[:,2:] = arr[:,[3,2]]
     return -jac.flatten()
+
+def constraints_SLSQP(clinched_rectangles:np.ndarray, east_neighbours, north_neighbours, holes):
+    constr_list = []
+    # lower, upper boundaries and clinched contacts
+    low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    high_Y_A, high_Y_rhs = high_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    constr_list.append({'type' : 'eq', 'fun': lambda x : low__X_A.dot(x) - low__X_rhs, 'jac' : lambda x : low__X_A})
+    constr_list.append({'type' : 'eq', 'fun': lambda x : low__Y_A.dot(x) - low__Y_rhs, 'jac' : lambda x : low__Y_A})
+    constr_list.append({'type' : 'eq', 'fun': lambda x : high_X_A.dot(x) - high_X_rhs, 'jac' : lambda x : high_X_A})
+    constr_list.append({'type' : 'eq', 'fun': lambda x : high_Y_A.dot(x) - high_Y_rhs, 'jac' : lambda x : high_Y_A})
+
+    cont_X_A, cont_X_rhs = contact_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+    cont_Y_A, cont_Y_rhs = contact_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+    constr_list.append({'type' : 'eq', 'fun': lambda x : cont_X_A.dot(x) - cont_X_rhs, 'jac' : lambda x : cont_X_A})
+    constr_list.append({'type' : 'eq', 'fun': lambda x : cont_Y_A.dot(x) - cont_Y_rhs, 'jac' : lambda x : cont_Y_A})
+
+    # holes
+    for hole in holes:
+        idxs_to_close = hole_closing_idxs(hole, clinched_rectangles)
+        constr_list.append({
+            'type' : 'eq',
+            'fun'  : lambda x, hole_closing_idxs=idxs_to_close : contacts_after_hole_closing(x, hole_closing_idxs),
+            'jac'  :lambda x, hole_closing_idxs=idxs_to_close : hole_closing_jac(x, hole_closing_idxs)
+            }
+        )
+    
+    # area
+    constr_list.append({
+        'type' : 'eq',
+        'fun' : area_constraint_fun,
+        'jac' : area_jac
+        }
+    )
+    return constr_list

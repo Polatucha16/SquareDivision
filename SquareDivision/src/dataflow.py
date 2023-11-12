@@ -146,24 +146,13 @@ def inflate_rectangles(arg_arr:np.ndarray):
             arr[i,:4] = np.array(wall_push(arr[i, :4], push_scale, dir))
     return arr
 
-def graph_processing(clinched_rectangles):
-    east_neighbours = contact_graph_incidence_matrix(clinched_rectangles, 'r').astype(int)
-    north_neighbours=contact_graph_incidence_matrix(clinched_rectangles, 'u').astype(int)
-    holes = find_holes(clinched_rectangles, east_neighbours, north_neighbours)
-    return east_neighbours, north_neighbours, holes
-
-def process(arr: np.ndarray):
-    arr = find_anchors_and_crop(arr)
-    arr = sort_by_area(arr)
-    arr = remove_smaller(arr)
-    clinched_rectangles = inflate_rectangles(arr)
-    east_neighbours, north_neighbours, holes = graph_processing(clinched_rectangles)
-    output = {
-        'arr' : arr,
-        'clinched_rectangles' : clinched_rectangles,
-        'east_neighbours' : east_neighbours,
-        'north_neighbours' : north_neighbours,
-        'holes' : holes
-    }
-    
-    return output
+# def process(arr: np.ndarray):
+#     arr = find_anchors_and_crop(arr)
+#     arr = sort_by_area(arr)
+#     arr = remove_smaller(arr)
+#     clinched_rectangles = inflate_rectangles(arr)
+#     output = {
+#         'arr' : arr,
+#         'clinched_rectangles' : clinched_rectangles,
+#     }
+#     return output

@@ -7,7 +7,7 @@ def graph_from_neighbours_arrays(east_neighbours, north_neighbours):
     G = nx.from_numpy_array(graph_matrix)
     return G
 
-def find_holes(clinched_rectangles, east_neighbours, north_neighbours):
+def find_holes(east_neighbours, north_neighbours):
     """ Return lists of indices of rectangles (rows in clinched_rectangles)
         that sorround hole in clinched_rectangles.
         """
@@ -46,3 +46,9 @@ def hole_closing_idxs(hole_path, clinched_rectangles):
     idx_of_right = hole_path[arg_of_top_X]
     idx_of__left = hole_path[(arg_of_top_X + 2) % 4]
     return [[idx_of__left, idx_of_right], [idx_of_bottom, idx_of_top ]]
+
+def holes_idxs(clinched_rectangles, holes):
+    closing_idxs = []
+    for hole in holes:
+        closing_idxs.append(hole_closing_idxs(hole, clinched_rectangles))
+    return closing_idxs

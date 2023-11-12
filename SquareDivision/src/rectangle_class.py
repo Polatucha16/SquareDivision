@@ -6,14 +6,15 @@ from scipy.optimize import minimize
 
 import matplotlib.pyplot as plt
 
-from SquareDivision.src.distributions import x_plus_y_func
+from SquareDivision.src.distributions import x_plus_y_func, tepui
 from SquareDivision.src.generators import uniform_pts
 from SquareDivision.src.dataflow import (
     find_anchors_and_crop,
     sort_by_area,
     remove_smaller,
     inflate_rectangles,
-    arg_rect_list)
+    arg_rect_list,
+    rects_from_distributions)
 from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
@@ -37,7 +38,13 @@ class Rectangulation():
         
     def sample(self, num = 10):
         # this needs to be changed maybe to strategy?
-        self.arr_sample = arg_rect_list(num, uniform_pts, self.func, rng=self.rng)
+        # self.arr_sample = arg_rect_list(num, uniform_pts, self.func, rng=self.rng)
+        self.arr_sample = rects_from_distributions(
+            num,
+            pts_func=uniform_pts,
+            width_distribution=tepui(base=0.05, top=0.5, slope=5, vertex=1.5),
+            height_distribution=tepui(base=0.05, top=0.5, slope=5, vertex=1.5),
+            rng=self.rng)
 
     def find_disjoint_family(self):
         self.arr = find_anchors_and_crop(self.arr_sample)

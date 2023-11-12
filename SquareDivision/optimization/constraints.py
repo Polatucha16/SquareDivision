@@ -194,5 +194,6 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
         vertical___contacts,
         area_constr
         ]
+    
     constraints.extend(holes_constraints)
     return constraints

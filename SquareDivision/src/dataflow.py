@@ -50,6 +50,17 @@ def arg_rect_list(n, pts_func, sizes_func, rng):
     width, height = np.array(sizes_func(x=x, y=y))
     return np.c_[x, y, width, height, width*height]
 
+def rects_from_distributions(
+        n, 
+        pts_func,
+        width_distribution,
+        height_distribution,
+        rng):
+     middle_points:np.ndarray = pts_func(n, rng=rng)
+     widths = np.apply_along_axis(width_distribution,  1, middle_points)
+     heights= np.apply_along_axis(height_distribution, 1, middle_points)
+     return np.c_[middle_points[:,0], middle_points[:,1], widths, heights, widths*heights]
+
 def find_anchors_and_crop(arr):
     def cut_to_01(a: np.ndarray):
         """ Return : (x, y, width, height, area) such that

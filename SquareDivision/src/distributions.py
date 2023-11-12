@@ -61,3 +61,38 @@ def x_plus_y_func(
     a_y = (min_11 - min_00) * y + min_00
     height = (b_y - a_y) * rng.random() + a_y
     return (width, height)
+
+pts_diag = np.array(
+    [[0.25, 0.25],
+     [0.75, 0.75]]
+    )
+def tepui(
+        base:float=0.05,
+        top:float=0.3,
+        slope:float=4,
+        vertex:float=1,
+        pts:np.ndarray=pts_diag
+):
+    """ Example:
+            import matplotlib.pyplot as plt
+            from matplotlib.axes import Axes
+
+            tepui_at = tepui(top=0.4)
+
+            x = np.arange(0, 1, 0.02)
+            y = np.arange(0, 1, 0.02)
+
+            X, Y = np.meshgrid(x, y)
+            points = np.array([X,Y])
+
+            nu = np.apply_along_axis(tepui_at, 0, points)
+
+            fig = plt.figure()
+            ax:Axes = fig.add_subplot(projection='3d')
+            ax.axes.set_xlim3d(left=0, right=1) 
+            ax.axes.set_ylim3d(bottom=0, top=1) 
+            ax.axes.set_zlim3d(bottom=0, top=1) 
+            ax.plot_surface(X, Y, nu)
+            plt.show()
+    """
+    return lambda pt : np.minimum(top, np.maximum(base, vertex - slope * np.min(np.linalg.norm(pts - pt, axis=1))))

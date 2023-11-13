@@ -5,6 +5,14 @@ from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidenc
 # from SquareDivision.holes.detect import find_holes
 from SquareDivision.holes.detect import hole_closing_idxs
 
+def basic_constr_arg(clinched_rectangles:np.ndarray):
+    n, cols = clinched_rectangles.shape
+    diag = np.ones(shape=(n * cols,))
+    A = np.diag(diag)
+    lb = np.zeros(shape=(n * cols,))
+    ub = np.ones(shape=(n * cols,))
+    return A , lb, ub
+
 def low_boundary_constraint_args(
     clinched_rectangles:np.ndarray, 
     upper_neighbours:np.ndarray, 
@@ -158,6 +166,9 @@ def constraints_SLSQP(clinched_rectangles:np.ndarray, east_neighbours, north_nei
     return constr_list
 
 def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbours, idxs_to_close):
+    # the basic constraint
+    basic_A, basic_lb, basic_ub = basic_constr_arg(clinched_rectangles)
+    basic_const = LinearConstraint(A=basic_A,lb=basic_lb,ub=basic_ub)
     # boundary rectangles constraints
     low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
     low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
@@ -188,6 +199,7 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
     area_constr = NonlinearConstraint(fun=area_constraint_fun, jac=area_jac, lb=0, ub=0)
 
     constraints = [
+        basic_const,
         low__X_constr, low__Y_constr,
         high_X_constr, high_Y_constr,
         horizontal_contacts,

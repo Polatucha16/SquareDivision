@@ -24,4 +24,4 @@ def contact_universal_x0(clinched_rectangles:np.ndarray):
             continue
         else:
             x0[num] = np.array([1, 1, 0, 0])
-    return x0
+    return x0.flatten()

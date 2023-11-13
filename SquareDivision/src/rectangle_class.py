@@ -20,7 +20,9 @@ from SquareDivision.contact_graph.incidence_matrix import (
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs
 from SquareDivision.optimization.constraints import constraints_trust_constr
-from SquareDivision.optimization.objective_function import dist_fun
+from SquareDivision.optimization.objective_function import dist_fun, ratio_demand_cost
+from SquareDivision.optimization.bounds import bounds_trust_constr
+from SquareDivision.optimization.initial_guess import contact_universal_x0
 from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
 from SquareDivision.config import config
 
@@ -53,7 +55,8 @@ class Rectangulation():
 
     def inflate(self):
         self.clinched_rectangles = inflate_rectangles(self.arr)
-    
+        # fix scaling numerical errors
+        self.clinched_rectangles = np.maximum(0, self.clinched_rectangles)
     def graph_processing(self):
         self.east_neighbours = contact_graph_incidence_matrix(self.clinched_rectangles, 'r').astype(int)
         self.north_neighbours=contact_graph_incidence_matrix(self.clinched_rectangles, 'u').astype(int)
@@ -75,6 +78,8 @@ class Rectangulation():
         plt.show()
     
     def prepare_constraints(self):
+        self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
+        self.bounds = bounds_trust_constr(self.clinched_rectangles[:, :4])
         self.holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
         self.const_trust = constraints_trust_constr(
             self.clinched_rectangles[:,:4], 
@@ -84,12 +89,14 @@ class Rectangulation():
         )
     def close_holes(self):
         self.sol = minimize(
+            # ratio_demand_cost,
             dist_fun, 
-            x0=self.clinched_rectangles[:,:4].flatten(), 
+            x0=self.clinched_rectangles[:,:4].flatten(), #self.x0,#
             args=(self.clinched_rectangles[:,:4]), 
             jac=True, 
             method='trust-constr', 
             constraints=self.const_trust)
+            # bounds = self.bounds)
     
     def draw_closed(self):
         self.closed = self.sol.x.reshape(-1,4)

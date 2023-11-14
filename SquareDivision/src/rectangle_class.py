@@ -18,7 +18,7 @@ from SquareDivision.src.dataflow import (
 from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
-from SquareDivision.holes.detect import find_holes, holes_idxs
+from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
 from SquareDivision.optimization.constraints import constraints_trust_constr
 from SquareDivision.optimization.objective_function import dist_fun, ratio_demand_cost
 from SquareDivision.optimization.bounds import bounds_trust_constr
@@ -81,6 +81,7 @@ class Rectangulation():
         self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
         self.bounds = bounds_trust_constr(self.clinched_rectangles[:, :4])
         self.holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
+        self.holes_idxs = check_holes(self.clinched_rectangles,self.holes_idxs)
         self.const_trust = constraints_trust_constr(
             self.clinched_rectangles[:,:4], 
             self.east_neighbours, 

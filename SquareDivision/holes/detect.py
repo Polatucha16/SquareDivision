@@ -28,14 +28,14 @@ def find_holes(east_neighbours, north_neighbours):
     return holes
 
 def hole_closing_idxs(hole_path, clinched_rectangles):
-    """ Return two pairs of indices [[i_X, j_X], [n_Y,m_Y]] representing 
+    """ Return two pairs of indices [[i_X, j_X], [n_Y, m_Y]] representing 
         two of possible ways of closing a hole in hole_path in clinched_rectangles.
         Return
             [i_X, j_X]  reprezent horizontal squeeze of a hole i.e.
             in configuration without holes(after squeezing) rectangle i_X is touching rectangle j_X:
                 arr[i_X, 0] + arr[i_X, 2] = arr[j_X, 0].
 
-            [i_X, j_X]  reprezent vertical squeeze of a hole i.e.
+            [n_Y, m_Y]  reprezent vertical squeeze of a hole i.e.
             in configuration without holes(after squeezing) rectangle n_Y is touching rectangle m_Y:
                 arr[n_Y, 1] + arr[n_Y, 3] = arr[m_Y, 1].
         """
@@ -52,3 +52,23 @@ def holes_idxs(clinched_rectangles, holes):
     for hole in holes:
         closing_idxs.append(hole_closing_idxs(hole, clinched_rectangles))
     return closing_idxs
+
+def check_holes(clinched_rectangles, closing_idxs):
+    """ check for rectangles inside holes """
+    mid_pts = clinched_rectangles[:,:2] + 0.5 * clinched_rectangles[:,2:4]
+    to_drop = []
+    for i, idxs in enumerate(closing_idxs):
+        ((left, right), (down, up)) = idxs
+        X_lb = clinched_rectangles[left, 0] + clinched_rectangles[left, 2]
+        X_ub = clinched_rectangles[right, 0]
+        between_X = (X_lb < mid_pts[:, 0]) * ( mid_pts[:, 0] < X_ub)
+        Y_lb = clinched_rectangles[down, 1] + clinched_rectangles[down, 3]
+        Y_ub = clinched_rectangles[up, 1]
+        between_Y = (Y_lb < mid_pts[:, 1]) * (mid_pts[:, 1] < Y_ub)
+        if (between_X * between_Y).sum() > 0:
+            # inside 'hole' there is/are rectangles => it is not a hole
+            to_drop.append(i)
+    # remove faulty idxs from closing_idxs
+    if len(to_drop) > 0:
+        fixed = [closing_idxs[i] for i in range(len(closing_idxs)) if i not in to_drop]
+    return fixed

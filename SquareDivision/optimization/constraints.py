@@ -185,7 +185,7 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
     horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs)
     vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs)
 
-    # one of opposite walls of evry hole have to close
+    # one of opposite walls of evry hole have to closed
     holes_constraints = []
     for idx_pair in idxs_to_close:
         holes_constraints.append(
@@ -199,7 +199,7 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
     area_constr = NonlinearConstraint(fun=area_constraint_fun, jac=area_jac, lb=0, ub=0)
 
     constraints = [
-        basic_const,
+        # basic_const,
         low__X_constr, low__Y_constr,
         high_X_constr, high_Y_constr,
         horizontal_contacts,

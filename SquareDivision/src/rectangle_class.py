@@ -3,6 +3,7 @@ import functools
 import numpy as np
 from numpy.random._generator import Generator
 from scipy.optimize import minimize
+import networkx as nx
 
 import matplotlib.pyplot as plt
 
@@ -55,11 +56,13 @@ class Rectangulation():
 
     def inflate(self):
         self.clinched_rectangles = inflate_rectangles(self.arr)
-        # fix scaling numerical errors
         self.clinched_rectangles = np.maximum(0, self.clinched_rectangles)
+
     def graph_processing(self):
         self.east_neighbours = contact_graph_incidence_matrix(self.clinched_rectangles, 'r').astype(int)
         self.north_neighbours=contact_graph_incidence_matrix(self.clinched_rectangles, 'u').astype(int)
+        self.east_graph = nx.from_numpy_array(self.east_neighbours)
+        self.north_graph= nx.from_numpy_array(self.north_neighbours)
         self.holes = find_holes(self.east_neighbours, self.north_neighbours)
     
     def execute(self, **kwargs):
@@ -91,9 +94,9 @@ class Rectangulation():
     def close_holes(self):
         self.sol = minimize(
             # ratio_demand_cost,
-            dist_fun, 
+            fun=lambda x : dist_fun(x, clinched_rectangles=self.clinched_rectangles[:,:4]), 
             x0=self.clinched_rectangles[:,:4].flatten(), #self.x0,#
-            args=(self.clinched_rectangles[:,:4]), 
+            # args=(self.clinched_rectangles[:,:4]), 
             jac=True, 
             method='trust-constr', 
             constraints=self.const_trust)

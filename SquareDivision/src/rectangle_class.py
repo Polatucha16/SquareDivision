@@ -64,6 +64,8 @@ class Rectangulation():
         self.east_graph = nx.from_numpy_array(self.east_neighbours)
         self.north_graph= nx.from_numpy_array(self.north_neighbours)
         self.holes = find_holes(self.east_neighbours, self.north_neighbours)
+        self.possible_holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
+        self.holes_idxs = check_holes(self.clinched_rectangles, self.possible_holes_idxs)
     
     def execute(self, **kwargs):
         self.load_distributions()
@@ -83,8 +85,6 @@ class Rectangulation():
     def prepare_constraints(self):
         self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
         self.bounds = bounds_trust_constr(self.clinched_rectangles[:, :4])
-        self.holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
-        self.holes_idxs = check_holes(self.clinched_rectangles,self.holes_idxs)
         self.const_trust = constraints_trust_constr(
             self.clinched_rectangles[:,:4], 
             self.east_neighbours, 

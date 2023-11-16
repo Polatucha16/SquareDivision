@@ -187,7 +187,7 @@ def factors_of_4_way_hole(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Gr
 
 def closing_holes_4_way(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
     val_dict = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
-    val = np.prod(np.array(list(val_dict.values())))
+    val = np.prod(np.array(list(val_dict.values()))) **2
     return val
 
 def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
@@ -198,10 +198,10 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
     if orientation == 'right':
         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
         lrh, lrv, udh, duv = vd['lrh'], vd['lrv'], vd['udh'], vd['duv']
-        m0 =       lrv * udh * duv
-        m1 = lrh       * udh * duv
-        m2 = lrh * lrv       * duv
-        m3 = lrh * lrv * udh
+        m0 = 2*lrh  * lrv**2 * udh**2 * duv**2
+        m1 = lrh**2 * 2*lrv  * udh**2 * duv**2
+        m2 = lrh**2 * lrv**2 * 2*udh  * duv**2
+        m3 = lrh**2 * lrv**2 * udh**2 * 2*duv
         jac_arr[[left, right, down, up]] = np.array(
                [[ m0, m1, m0, m1],
                 [-m0,-m1,  0,  0],
@@ -212,10 +212,10 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
     elif orientation == 'left':
         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
         lrh, rlv, duh, duv = vd['lrh'], vd['rlv'], vd['duh'], vd['duv']
-        m0 =       rlv * duh * duv
-        m1 = lrh       * duh * duv
-        m2 = lrh * rlv       * duv
-        m3 = lrh * rlv * duh
+        m0 = 2*lrh  * rlv**2 * duh**2 * duv**2
+        m1 = lrh**2 * 2*rlv  * duh**2 * duv**2
+        m2 = lrh**2 * rlv**2 * 2*duh  * duv**2
+        m3 = lrh**2 * rlv**2 * duh**2 * 2*duv
         jac_arr[[left, right, down, up]] = np.array(
                [[ m0,-m1, m0,  0],
                 [-m0, m1,  0, m1],
@@ -223,6 +223,40 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
                 [-m2,-m3,  0,  0]]
             )
         return jac_arr.flatten()
+
+# def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
+#     arr:np.ndarray = x.reshape(-1, 4)
+#     jac_arr = np.zeros(shape=arr.shape)
+#     [[left, right], [down, up]] = hole_closing_idxs
+#     orientation = hole_orientation(hole_closing_idxs, east_graph, north_graph)
+#     if orientation == 'right':
+#         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
+#         lrh, lrv, udh, duv = vd['lrh'], vd['lrv'], vd['udh'], vd['duv']
+#         m0 =       lrv * udh * duv
+#         m1 = lrh       * udh * duv
+#         m2 = lrh * lrv       * duv
+#         m3 = lrh * lrv * udh
+#         jac_arr[[left, right, down, up]] = np.array(
+#                [[ m0, m1, m0, m1],
+#                 [-m0,-m1,  0,  0],
+#                 [-m2, m3,  0, m3],
+#                 [ m2,-m3, m2,  0]]
+#             )
+#         return jac_arr.flatten()
+#     elif orientation == 'left':
+#         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
+#         lrh, rlv, duh, duv = vd['lrh'], vd['rlv'], vd['duh'], vd['duv']
+#         m0 =       rlv * duh * duv
+#         m1 = lrh       * duh * duv
+#         m2 = lrh * rlv       * duv
+#         m3 = lrh * rlv * duh
+#         jac_arr[[left, right, down, up]] = np.array(
+#                [[ m0,-m1, m0,  0],
+#                 [-m0, m1,  0, m1],
+#                 [ m2, m3, m2, m3],
+#                 [-m2,-m3,  0,  0]]
+#             )
+#         return jac_arr.flatten()
 
 def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
     arr:np.ndarray = x.reshape(-1, 4)
@@ -329,17 +363,19 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
                     hole_closing_idxs,
                     east_graph=east_graph,
                     north_graph=north_graph),
-                jac='3-point',#lambda x, hole_closing_idxs=idx_pair : closing_holes_4_way_jac(
-                    # x, 
-                    # hole_closing_idxs,
-                    # east_graph=east_graph,
-                    # north_graph=north_graph),
-                lb=0, ub=0)
+                jac=lambda x, hole_closing_idxs=idx_pair : closing_holes_4_way_jac(
+                    x, 
+                    hole_closing_idxs,
+                    east_graph=east_graph,
+                    north_graph=north_graph),
+                lb=0, 
+                ub=0
+            )
         )
 
     # area constraint forcing holes to close
     area_constr = NonlinearConstraint(fun=area_constraint_fun, 
-                                      jac='3-point',#area_jac, 
+                                      jac=area_jac, 
                                       lb=0, ub=0)
 
     constraints = [

@@ -20,8 +20,8 @@ from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
-from SquareDivision.optimization.constraints import constraints_trust_constr
-from SquareDivision.optimization.objective_function import dist_fun, ratio_demand_cost
+from SquareDivision.optimization.constraints import linear_constraints, nonlinear_constraints
+from SquareDivision.optimization.objective_function import dist_fun#, ratio_demand_cost
 from SquareDivision.optimization.bounds import bounds_trust_constr
 from SquareDivision.optimization.initial_guess import contact_universal_x0
 from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
@@ -74,41 +74,49 @@ class Rectangulation():
         self.inflate()
         self.graph_processing()
     
-    def draw(self):
-        fig, axes = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
-        axes[0] = draw_rectangles(axes[0], self.arr[:,:4])
-        axes[0] = rectangle_numbers(axes[0],  self.arr[:,:4])
-        axes[1] = draw_rectangles(axes[1],  self.clinched_rectangles[:,:4])
-        axes[1] = rectangle_numbers(axes[1],  self.clinched_rectangles[:,:4])
-        plt.show()
-    
     def prepare_constraints(self):
-        self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
-        self.bounds = bounds_trust_constr(self.clinched_rectangles[:, :4])
-        self.const_trust = constraints_trust_constr(
-            self.clinched_rectangles[:,:4], 
+        # self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
+        self.x0 = self.clinched_rectangles.flatten()
+        self.bounds = bounds_trust_constr(self.clinched_rectangles)
+        self.linear____constr = linear_constraints(
+            self.clinched_rectangles, 
             self.east_neighbours, 
             self.north_neighbours,
+            )
+        self.nonlinear_constr = nonlinear_constraints(
+            self.east_graph, 
+            self.north_graph, 
             self.holes_idxs
-        )
+            )
     def close_holes(self):
         self.sol = minimize(
-            # ratio_demand_cost,
-            fun=lambda x : dist_fun(x, clinched_rectangles=self.clinched_rectangles[:,:4]), 
-            x0=self.clinched_rectangles[:,:4].flatten(), #self.x0,#
-            # args=(self.clinched_rectangles[:,:4]), 
+            fun= lambda x : dist_fun(x, clinched_rectangles=self.clinched_rectangles), 
+            x0=self.x0,
             jac=True, 
             method='trust-constr', 
-            constraints=self.const_trust)
-            # bounds = self.bounds)
-    
-    def draw_closed(self):
+            constraints=self.linear____constr + self.nonlinear_constr,
+            bounds = self.bounds)
         self.closed = self.sol.x.reshape(-1,4)
-        fig, axes = plt.subplots(nrows=1, ncols=3, figsize=(15, 5))
-        axes[0] = draw_rectangles(axes[0], self.arr[:,:4])
-        axes[0] = rectangle_numbers(axes[0],  self.arr[:,:4])
-        axes[1] = draw_rectangles(axes[1],  self.clinched_rectangles[:,:4])
-        axes[1] = rectangle_numbers(axes[1],  self.clinched_rectangles[:,:4])
-        axes[2] = draw_rectangles(axes[2], self.closed)
-        axes[2] = rectangle_numbers(axes[2],  self.closed)
+
+    def draw(self, disjoint:bool, inflated:bool, closed:bool, size:int=5):
+        num_of_axes = np.array([disjoint, inflated, closed]).sum()
+        fig, axes = plt.subplots(
+            nrows=1,
+            ncols=num_of_axes, 
+            figsize=(num_of_axes * size, size))
+        axes = [axes] if num_of_axes == 1 else axes
+        i = 0 
+        if disjoint is True:
+            axes[i] = draw_rectangles(axes[i], self.arr)
+            axes[i] = rectangle_numbers(axes[i],  self.arr)
+            i += 1
+        if inflated is True:
+            axes[i] = draw_rectangles(axes[i],  self.clinched_rectangles)
+            axes[i] = rectangle_numbers(axes[i],  self.clinched_rectangles)
+            i += 1
+        if closed is True:
+            axes[i] = draw_rectangles(axes[i], self.closed)
+            axes[i] = rectangle_numbers(axes[i],  self.closed)
+            i += 1
         plt.show()
+

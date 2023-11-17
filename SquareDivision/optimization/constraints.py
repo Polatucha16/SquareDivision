@@ -6,13 +6,13 @@ from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidenc
 # from SquareDivision.holes.detect import find_holes
 from SquareDivision.holes.detect import hole_closing_idxs
 
-def basic_constr_arg(clinched_rectangles:np.ndarray):
-    n, cols = clinched_rectangles.shape
-    diag = np.ones(shape=(n * cols,))
-    A = np.diag(diag)
-    lb = np.zeros(shape=(n * cols,))
-    ub = np.ones(shape=(n * cols,))
-    return A , lb, ub
+# def basic_constr_arg(clinched_rectangles:np.ndarray):
+#     n, cols = clinched_rectangles.shape
+#     diag = np.ones(shape=(n * cols,))
+#     A = np.diag(diag)
+#     lb = np.zeros(shape=(n * cols,))
+#     ub = np.ones(shape=(n * cols,))
+#     return A , lb, ub
 
 def low_boundary_constraint_args(
     clinched_rectangles:np.ndarray, 
@@ -187,42 +187,8 @@ def factors_of_4_way_hole(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Gr
 
 def closing_holes_4_way(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
     val_dict = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
-    val = np.prod(np.array(list(val_dict.values()))) **2
+    val = np.prod(np.array(list(val_dict.values())))
     return val
-
-def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
-    arr:np.ndarray = x.reshape(-1, 4)
-    jac_arr = np.zeros(shape=arr.shape)
-    [[left, right], [down, up]] = hole_closing_idxs
-    orientation = hole_orientation(hole_closing_idxs, east_graph, north_graph)
-    if orientation == 'right':
-        vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
-        lrh, lrv, udh, duv = vd['lrh'], vd['lrv'], vd['udh'], vd['duv']
-        m0 = 2*lrh  * lrv**2 * udh**2 * duv**2
-        m1 = lrh**2 * 2*lrv  * udh**2 * duv**2
-        m2 = lrh**2 * lrv**2 * 2*udh  * duv**2
-        m3 = lrh**2 * lrv**2 * udh**2 * 2*duv
-        jac_arr[[left, right, down, up]] = np.array(
-               [[ m0, m1, m0, m1],
-                [-m0,-m1,  0,  0],
-                [-m2, m3,  0, m3],
-                [ m2,-m3, m2,  0]]
-            )
-        return jac_arr.flatten()
-    elif orientation == 'left':
-        vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
-        lrh, rlv, duh, duv = vd['lrh'], vd['rlv'], vd['duh'], vd['duv']
-        m0 = 2*lrh  * rlv**2 * duh**2 * duv**2
-        m1 = lrh**2 * 2*rlv  * duh**2 * duv**2
-        m2 = lrh**2 * rlv**2 * 2*duh  * duv**2
-        m3 = lrh**2 * rlv**2 * duh**2 * 2*duv
-        jac_arr[[left, right, down, up]] = np.array(
-               [[ m0,-m1, m0,  0],
-                [-m0, m1,  0, m1],
-                [ m2, m3, m2, m3],
-                [-m2,-m3,  0,  0]]
-            )
-        return jac_arr.flatten()
 
 # def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
 #     arr:np.ndarray = x.reshape(-1, 4)
@@ -232,10 +198,10 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
 #     if orientation == 'right':
 #         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
 #         lrh, lrv, udh, duv = vd['lrh'], vd['lrv'], vd['udh'], vd['duv']
-#         m0 =       lrv * udh * duv
-#         m1 = lrh       * udh * duv
-#         m2 = lrh * lrv       * duv
-#         m3 = lrh * lrv * udh
+#         m0 = 2*lrh  * lrv**2 * udh**2 * duv**2
+#         m1 = lrh**2 * 2*lrv  * udh**2 * duv**2
+#         m2 = lrh**2 * lrv**2 * 2*udh  * duv**2
+#         m3 = lrh**2 * lrv**2 * udh**2 * 2*duv
 #         jac_arr[[left, right, down, up]] = np.array(
 #                [[ m0, m1, m0, m1],
 #                 [-m0,-m1,  0,  0],
@@ -246,10 +212,10 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
 #     elif orientation == 'left':
 #         vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
 #         lrh, rlv, duh, duv = vd['lrh'], vd['rlv'], vd['duh'], vd['duv']
-#         m0 =       rlv * duh * duv
-#         m1 = lrh       * duh * duv
-#         m2 = lrh * rlv       * duv
-#         m3 = lrh * rlv * duh
+#         m0 = 2*lrh  * rlv**2 * duh**2 * duv**2
+#         m1 = lrh**2 * 2*rlv  * duh**2 * duv**2
+#         m2 = lrh**2 * rlv**2 * 2*duh  * duv**2
+#         m3 = lrh**2 * rlv**2 * duh**2 * 2*duv
 #         jac_arr[[left, right, down, up]] = np.array(
 #                [[ m0,-m1, m0,  0],
 #                 [-m0, m1,  0, m1],
@@ -258,20 +224,54 @@ def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.
 #             )
 #         return jac_arr.flatten()
 
-def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
+def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
     arr:np.ndarray = x.reshape(-1, 4)
     jac_arr = np.zeros(shape=arr.shape)
-    idx_left, idx_right = hole_closing_idxs[0]
-    idx_down, idx___top = hole_closing_idxs[1]
-    diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
-    diff_Y = arr[idx___top, 1] - (arr[idx_down, 1] + arr[idx_down, 3])
-    jac_arr[idx_right, 0] = diff_Y
-    jac_arr[idx_left, 0] = -diff_Y
-    jac_arr[idx_left, 2] = -diff_Y
-    jac_arr[idx___top, 1] = diff_X
-    jac_arr[idx_down, 1] = -diff_X
-    jac_arr[idx_down, 3] = -diff_X
-    return jac_arr.flatten()
+    [[left, right], [down, up]] = hole_closing_idxs
+    orientation = hole_orientation(hole_closing_idxs, east_graph, north_graph)
+    if orientation == 'right':
+        vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
+        lrh, lrv, udh, duv = vd['lrh'], vd['lrv'], vd['udh'], vd['duv']
+        m0 =       lrv * udh * duv
+        m1 = lrh       * udh * duv
+        m2 = lrh * lrv       * duv
+        m3 = lrh * lrv * udh
+        jac_arr[[left, right, down, up]] = np.array(
+               [[ m0, m1, m0, m1],
+                [-m0,-m1,  0,  0],
+                [-m2, m3,  0, m3],
+                [ m2,-m3, m2,  0]]
+            )
+        return jac_arr.flatten()
+    elif orientation == 'left':
+        vd = factors_of_4_way_hole(x, hole_closing_idxs, east_graph, north_graph)
+        lrh, rlv, duh, duv = vd['lrh'], vd['rlv'], vd['duh'], vd['duv']
+        m0 =       rlv * duh * duv
+        m1 = lrh       * duh * duv
+        m2 = lrh * rlv       * duv
+        m3 = lrh * rlv * duh
+        jac_arr[[left, right, down, up]] = np.array(
+               [[ m0,-m1, m0,  0],
+                [-m0, m1,  0, m1],
+                [ m2, m3, m2, m3],
+                [-m2,-m3,  0,  0]]
+            )
+        return jac_arr.flatten()
+
+# def hole_closing_jac(x:np.ndarray, hole_closing_idxs:list):
+#     arr:np.ndarray = x.reshape(-1, 4)
+#     jac_arr = np.zeros(shape=arr.shape)
+#     idx_left, idx_right = hole_closing_idxs[0]
+#     idx_down, idx___top = hole_closing_idxs[1]
+#     diff_X = arr[idx_right, 0] - (arr[idx_left, 0] + arr[idx_left, 2])
+#     diff_Y = arr[idx___top, 1] - (arr[idx_down, 1] + arr[idx_down, 3])
+#     jac_arr[idx_right, 0] = diff_Y
+#     jac_arr[idx_left, 0] = -diff_Y
+#     jac_arr[idx_left, 2] = -diff_Y
+#     jac_arr[idx___top, 1] = diff_X
+#     jac_arr[idx_down, 1] = -diff_X
+#     jac_arr[idx_down, 3] = -diff_X
+#     return jac_arr.flatten()
 
 def area_constraint_fun(x:np.ndarray, columns = 4):
     """ Nonlinear constraints
@@ -284,8 +284,8 @@ def area_jac(x:np.ndarray, columns = 4):
     """ Calculates the jacobian of area_constraint_fun at x"""
     arr:np.ndarray = x.reshape(-1, columns)
     jac:np.ndarray = np.zeros(shape=arr.shape)
-    jac[:,2:] = arr[:,[3,2]]
-    return -jac.flatten()
+    jac[:,2:] = (-1) * arr[:,[3,2]]
+    return jac.flatten()
 
 # def constraints_SLSQP(clinched_rectangles:np.ndarray, east_neighbours, north_neighbours, holes):
 #     constr_list = []
@@ -323,25 +323,26 @@ def area_jac(x:np.ndarray, columns = 4):
 #     )
 #     return constr_list
 
-def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbours, idxs_to_close):
+def linear_constraints(clinched_rectangles, east_neighbours, north_neighbours, keep_feasible=True):
     # the basic constraint
-    basic_A, basic_lb, basic_ub = basic_constr_arg(clinched_rectangles)
-    basic_const = LinearConstraint(A=basic_A,lb=basic_lb,ub=basic_ub)
+    # basic_A, basic_lb, basic_ub = basic_constr_arg(clinched_rectangles)
+    # basic_const = LinearConstraint(A=basic_A,lb=basic_lb,ub=basic_ub)
+
     # boundary rectangles constraints
     low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
     low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
     high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
     high_Y_A, high_Y_rhs = high_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
-    low__X_constr = LinearConstraint( A=low__X_A, lb=low__X_rhs, ub=low__X_rhs)
-    low__Y_constr = LinearConstraint( A=low__Y_A, lb=low__Y_rhs, ub=low__Y_rhs)
-    high_X_constr = LinearConstraint( A=high_X_A, lb=high_X_rhs, ub=high_X_rhs)
-    high_Y_constr = LinearConstraint( A=high_Y_A, lb=high_Y_rhs, ub=high_Y_rhs)
+    low__X_constr = LinearConstraint( A=low__X_A, lb=low__X_rhs, ub=low__X_rhs, keep_feasible=keep_feasible)
+    low__Y_constr = LinearConstraint( A=low__Y_A, lb=low__Y_rhs, ub=low__Y_rhs, keep_feasible=keep_feasible)
+    high_X_constr = LinearConstraint( A=high_X_A, lb=high_X_rhs, ub=high_X_rhs, keep_feasible=keep_feasible)
+    high_Y_constr = LinearConstraint( A=high_Y_A, lb=high_Y_rhs, ub=high_Y_rhs, keep_feasible=keep_feasible)
 
     # constacts from constact graphs
     cont_X_A, cont_X_rhs = contact_constraint_args(clinched_rectangles, east_neighbours, axis=0)
     cont_Y_A, cont_Y_rhs = contact_constraint_args(clinched_rectangles, north_neighbours, axis=1)
-    horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs)
-    vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs)
+    horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs, keep_feasible=keep_feasible)
+    vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs, keep_feasible=keep_feasible)
 
     # one of opposite walls of evry hole have to closed
     # holes_constraints = []
@@ -352,40 +353,44 @@ def constraints_trust_constr(clinched_rectangles, east_neighbours, north_neighbo
     #             jac=lambda x, hole_closing_idxs=idx_pair : hole_closing_jac(x, hole_closing_idxs),
     #             lb=0, ub=0)
     #     )
-    east_graph  = nx.from_numpy_array(east_neighbours)
-    north_graph = nx.from_numpy_array(north_neighbours)
-    holes_constraints = []
-    for idx_pair in idxs_to_close:
-        holes_constraints.append(
-            NonlinearConstraint(
-                fun=lambda x, hole_closing_idxs=idx_pair : closing_holes_4_way(
-                    x, 
-                    hole_closing_idxs,
-                    east_graph=east_graph,
-                    north_graph=north_graph),
-                jac=lambda x, hole_closing_idxs=idx_pair : closing_holes_4_way_jac(
-                    x, 
-                    hole_closing_idxs,
-                    east_graph=east_graph,
-                    north_graph=north_graph),
-                lb=0, 
-                ub=0
-            )
-        )
 
-    # area constraint forcing holes to close
-    area_constr = NonlinearConstraint(fun=area_constraint_fun, 
-                                      jac=area_jac, 
-                                      lb=0, ub=0)
-
-    constraints = [
-        basic_const,
+    constr_list = [
         low__X_constr, low__Y_constr,
         high_X_constr, high_Y_constr,
         horizontal_contacts,
         vertical___contacts,
-        area_constr
         ]
+    return constr_list
+
+def nonlinear_constraints(east_graph:nx.Graph, north_graph:nx.Graph, idxs_to_close, keep_feasible=True):
+    constr_list = []
+    # area constraint forcing holes to close
+    constr_list.append(
+        NonlinearConstraint(
+            fun=area_constraint_fun,
+            jac=area_jac, 
+            lb=0, ub=0,
+            keep_feasible=keep_feasible)
+    )
+
+    holes_constraints = []
+    for idx_pair in idxs_to_close:
+        holes_constraints.append(
+            NonlinearConstraint(
+                fun=lambda x, hole_closing_idxs=idx_pair : 10000*closing_holes_4_way(
+                    x, 
+                    hole_closing_idxs,
+                    east_graph=east_graph,
+                    north_graph=north_graph),
+                jac=lambda x, hole_closing_idxs=idx_pair : 10000*closing_holes_4_way_jac(
+                    x, 
+                    hole_closing_idxs,
+                    east_graph=east_graph,
+                    north_graph=north_graph),
+                lb=0, ub=0,
+                keep_feasible=keep_feasible
+            )
+        )
+    constr_list.extend(holes_constraints)
+    return constr_list
     
-    constraints.extend(holes_constraints)
-    return constraints

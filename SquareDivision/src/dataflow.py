@@ -9,12 +9,11 @@ from SquareDivision.contact_graph.incidence_matrix import (
 from SquareDivision.holes.detect import find_holes
 
 def arg_rect_list(n, pts_func, sizes_func, rng):
-    """ Return an np.ndarray (n,5) with rows of the form:
-        (x, y, width, height, area)
+    """ Return an np.ndarray (n,4) with rows of the form:
+        (x, y, width, height)
         representing:
             x, y - center of a rectangle
             width, height - parameters for matplotlib.patches.Rectangle
-            area - width * height
         Arguments
             pts_func : function that generates points
                 Returns  
@@ -48,7 +47,7 @@ def arg_rect_list(n, pts_func, sizes_func, rng):
     pts:np.ndarray = pts_func(n, rng=rng)
     x, y = pts[:, 0], pts[:, 1]
     width, height = np.array(sizes_func(x=x, y=y))
-    return np.c_[x, y, width, height, width*height]
+    return np.c_[x, y, width, height]
 
 def rects_from_distributions(
         n, 
@@ -59,7 +58,7 @@ def rects_from_distributions(
      middle_points:np.ndarray = pts_func(n, rng=rng)
      widths = np.apply_along_axis(width_distribution,  1, middle_points)
      heights= np.apply_along_axis(height_distribution, 1, middle_points)
-     return np.c_[middle_points[:,0], middle_points[:,1], widths, heights, widths*heights]
+     return np.c_[middle_points[:,0], middle_points[:,1], widths, heights]
 
 def find_anchors_and_crop(arr):
     def cut_to_01(a: np.ndarray):
@@ -73,16 +72,19 @@ def find_anchors_and_crop(arr):
                 width, height - parameters for matplotlib.patches.Rectangle
                 area - width * height
         """
-        x, y, width, height, area = a
+        x, y, width, height = a
         x = max(x - width / 2, 0)
         y = max(y - height / 2, 0)
         width = min(width , abs(x-1))
         height= min(height , abs(y-1))
-        return (x, y, width, height, width * height)
+        return (x, y, width, height)
     return np.apply_along_axis(cut_to_01, 1, arr)
 
 def sort_by_area(a:np.ndarray):
-    return a[a[:, -1].argsort()]
+    widths = a[:,2]
+    heights= a[:,3]
+    areas  = widths * heights
+    return np.flip(a[areas.argsort()], axis=0)
 
 def intersect_Q(rects0 : np.ndarray, rects1 : np.ndarray):
     """ Returns array res : np.ndarray (N, M)(check?) such that:
@@ -108,7 +110,7 @@ def intersect_Q(rects0 : np.ndarray, rects1 : np.ndarray):
     dy = min_ymax - max_ymin
     return (dx>0).astype(int) * (dy>0).astype(int)
 
-def remove_smaller(arr:np.ndarray, intersect_Q:Callable=intersect_Q, flipQ:bool=True):
+def remove_smaller(arr:np.ndarray, intersect_Q:Callable=intersect_Q):
     """ Return array of disjoint rectangles keeping the order:
             i-th row of arr represent rectangle, call it R[i]
             if i < j and R[i] do intersect R[j] then remove R[j]. 
@@ -117,10 +119,7 @@ def remove_smaller(arr:np.ndarray, intersect_Q:Callable=intersect_Q, flipQ:bool=
             intersect_Q : function that produces every to every intersection array
             flipQ : switch to change the order of the rectangles
         """
-    if flipQ is True:
-        arr = np.flip(arr, axis=0)
-
-    # intersect_arr is 1 @ (i,j) if R[i} and R[j] are disjoint, 0 otherwise 
+    # <intersect_arr> is 1 @ (i,j) if R[i} and R[j] are disjoint, 0 otherwise 
     intersect_arr = 1 - intersect_Q(arr, arr) 
 
     # column with ones at the end to  keep track if we keep or remove that row
@@ -156,14 +155,3 @@ def inflate_rectangles(arg_arr:np.ndarray):
             push_scale = homogeneous_scale_in_dir_search(i, arr, dir, 'push')
             arr[i,:4] = np.array(wall_push(arr[i, :4], push_scale, dir))
     return arr
-
-# def process(arr: np.ndarray):
-#     arr = find_anchors_and_crop(arr)
-#     arr = sort_by_area(arr)
-#     arr = remove_smaller(arr)
-#     clinched_rectangles = inflate_rectangles(arr)
-#     output = {
-#         'arr' : arr,
-#         'clinched_rectangles' : clinched_rectangles,
-#     }
-#     return output

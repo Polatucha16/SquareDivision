@@ -71,4 +71,6 @@ def check_holes(clinched_rectangles, closing_idxs):
     # remove faulty idxs from closing_idxs
     if len(to_drop) > 0:
         fixed = [closing_idxs[i] for i in range(len(closing_idxs)) if i not in to_drop]
+    else:
+        fixed = []
     return fixed

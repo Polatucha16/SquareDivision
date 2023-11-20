@@ -3,9 +3,13 @@ from numpy import linalg as LA
 
 def dist_fun(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
     arr = arg.reshape(-1,4)
+    width, height =  arr[:,2], arr[:,3]
     dist = LA.norm(arr - clinched_rectangles)**2
-    jac = (2*(arr - clinched_rectangles)).flatten()
-    return dist, jac
+    dist_jac = (2*(arr - clinched_rectangles)).flatten()
+    area_term = np.abs(1- width.dot(height))
+    area_jac:np.ndarray = np.zeros(shape=arr.shape)
+    area_jac[:,2:] = (-1) * np.sign(1 - width.dot(height)) * arr[:,[3,2]]
+    return dist + area_term , dist_jac + area_jac.flatten()
 
 # def ratio_demand_cost(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
 #     #### COST

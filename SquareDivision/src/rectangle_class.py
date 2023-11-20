@@ -3,6 +3,7 @@ import functools
 import numpy as np
 from numpy.random._generator import Generator
 from scipy.optimize import minimize
+from scipy.optimize import LinearConstraint, NonlinearConstraint
 import networkx as nx
 
 import matplotlib.pyplot as plt
@@ -74,19 +75,22 @@ class Rectangulation():
         self.inflate()
         self.graph_processing()
     
-    def prepare_constraints(self):
-        # self.x0 = contact_universal_x0(self.clinched_rectangles[:, :4])
+    def prepare_constraints(self, keep_feasible=True):
+        # self.x0 = contact_universal_x0(self.clinched_rectangles)
         self.x0 = self.clinched_rectangles.flatten()
+
         self.bounds = bounds_trust_constr(self.clinched_rectangles)
         self.linear____constr = linear_constraints(
             self.clinched_rectangles, 
             self.east_neighbours, 
             self.north_neighbours,
+            keep_feasible=keep_feasible
             )
         self.nonlinear_constr = nonlinear_constraints(
             self.east_graph, 
             self.north_graph, 
-            self.holes_idxs
+            self.holes_idxs,
+            keep_feasible=keep_feasible
             )
     def close_holes(self):
         self.sol = minimize(
@@ -94,9 +98,24 @@ class Rectangulation():
             x0=self.x0,
             jac=True, 
             method='trust-constr', 
-            constraints=self.linear____constr + self.nonlinear_constr,
-            bounds = self.bounds)
+            constraints= self.linear____constr + self.nonlinear_constr,
+            bounds = self.bounds,
+            tol=1e-10)
         self.closed = self.sol.x.reshape(-1,4)
+
+    def report(self):
+        clinch:np.ndarray = self.clinched_rectangles
+        closed:np.ndarray = self.closed
+        non_lin_const:NonlinearConstraint
+        lin_const:LinearConstraint
+        print('---- AREA AND HOLES CONSTRAINTS------------------------------------------')
+        for non_lin_const in self.nonlinear_constr:
+            print(f'clinch: {non_lin_const.fun(clinch.flatten()):.2f}, closed: {non_lin_const.fun(closed.flatten()):.2f}\
+        lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
+        print('\n----INITIAL CONTACT AND BOUNDARIES---------------------------------------')
+        for lin_const in self.linear____constr:
+            print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.2f}, closed: {lin_const.A.dot(closed.flatten()).sum():.2f}\
+        lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
 
     def draw(self, disjoint:bool, inflated:bool, closed:bool, size:int=5):
         num_of_axes = np.array([disjoint, inflated, closed]).sum()

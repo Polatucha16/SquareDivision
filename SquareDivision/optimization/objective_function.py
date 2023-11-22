@@ -1,15 +1,21 @@
 import numpy as np
 from numpy import linalg as LA
+import networkx as nx
 
-def dist_fun(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
+#### Distance
+def dist_sqrd(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
     arr = arg.reshape(-1,4)
-    width, height =  arr[:,2], arr[:,3]
-    dist = LA.norm(arr - clinched_rectangles)**2
-    dist_jac = (2*(arr - clinched_rectangles)).flatten()
-    area_term = np.abs(1- width.dot(height))
-    area_jac:np.ndarray = np.zeros(shape=arr.shape)
-    area_jac[:,2:] = (-1) * np.sign(1 - width.dot(height)) * arr[:,[3,2]]
-    return dist + area_term , dist_jac + area_jac.flatten()
+    return LA.norm(arr - clinched_rectangles)**2
+
+def dist_grad(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
+    arr = arg.reshape(-1,4)
+    return (2*(arr - clinched_rectangles)).flatten()
+
+#### Objective
+def objective (arg, clinched_rectangles):
+    dist_fun = dist_sqrd(arg, clinched_rectangles)
+    dist_jac = dist_grad(arg, clinched_rectangles)
+    return dist_fun, dist_jac
 
 # def ratio_demand_cost(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
 #     #### COST

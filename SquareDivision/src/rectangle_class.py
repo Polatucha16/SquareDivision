@@ -21,7 +21,7 @@ from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
-from SquareDivision.optimization.constraints import linear_constraints, hole_closing_constraints,nonlinear_constraints
+from SquareDivision.optimization.constraints import linear_constraints, hole_closing_constraints, linear_constraint
 from SquareDivision.optimization.objective_function import objective#, ratio_demand_cost
 from SquareDivision.optimization.bounds import bounds_trust_constr
 from SquareDivision.optimization.initial_guess import contact_universal_x0
@@ -92,13 +92,18 @@ class Rectangulation():
             self.clinched_rectangles, 
             keep_feasible=keep_feasible
             )
-        self.nonlinear_constr = nonlinear_constraints(
+        self.constraint = linear_constraint(
+            self.clinched_rectangles, 
+            self.east_neighbours, 
+            self.north_neighbours,
+            self.holes_idxs,
             keep_feasible=keep_feasible
         )
-        self.constraints = self.linear____constr + self.holes_constr #+ self.nonlinear_constr
+        # self.constraints = self.linear____constr + self.holes_constr
+        self.constraints = self.constraint
         # for reporting
         self.lin_report = self.linear____constr + self.holes_constr
-        self.non_lin_report = self.nonlinear_constr
+        self.non_lin_report = []
 
     def close_holes(self):
         self.sol = minimize(

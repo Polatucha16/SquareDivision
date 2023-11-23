@@ -21,7 +21,7 @@ from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
-from SquareDivision.optimization.constraints import linear_constraints, nonlinear_constraints
+from SquareDivision.optimization.constraints import linear_constraints, hole_closing_constraints,nonlinear_constraints
 from SquareDivision.optimization.objective_function import objective#, ratio_demand_cost
 from SquareDivision.optimization.bounds import bounds_trust_constr
 from SquareDivision.optimization.initial_guess import contact_universal_x0
@@ -59,14 +59,15 @@ class Rectangulation():
         self.clinched_rectangles = inflate_rectangles(self.arr)
         self.clinched_rectangles = np.maximum(0, self.clinched_rectangles)
 
-    def graph_processing(self):
-        self.east_neighbours = contact_graph_incidence_matrix(self.clinched_rectangles, 'r').astype(int)
-        self.north_neighbours=contact_graph_incidence_matrix(self.clinched_rectangles, 'u').astype(int)
+    def graph_processing(self, rectangles=None):
+        rectangles = self.clinched_rectangles if rectangles is None else rectangles
+        self.east_neighbours = contact_graph_incidence_matrix(rectangles, 'r').astype(int)
+        self.north_neighbours=contact_graph_incidence_matrix(rectangles, 'u').astype(int)
         self.east_graph = nx.from_numpy_array(self.east_neighbours)
         self.north_graph= nx.from_numpy_array(self.north_neighbours)
         self.holes = find_holes(self.east_neighbours, self.north_neighbours)
-        self.possible_holes_idxs = holes_idxs(self.clinched_rectangles, self.holes)
-        self.holes_idxs = check_holes(self.clinched_rectangles, self.possible_holes_idxs)
+        self.possible_holes_idxs = holes_idxs(rectangles, self.holes)
+        self.holes_idxs = check_holes(rectangles, self.possible_holes_idxs)
     
     def execute(self, **kwargs):
         self.load_distributions()
@@ -76,9 +77,8 @@ class Rectangulation():
         self.graph_processing()
     
     def prepare_constraints(self, keep_feasible=True):
-        self.x0 = contact_universal_x0(self.clinched_rectangles)
-        # self.x0 = self.clinched_rectangles.flatten()
-        # find some x0 with fsolve
+        # self.x0 = contact_universal_x0(self.clinched_rectangles)
+        self.x0 = self.clinched_rectangles.flatten()
 
         self.bounds = bounds_trust_constr(self.clinched_rectangles, keep_feasible=keep_feasible)
         self.linear____constr = linear_constraints(
@@ -87,49 +87,52 @@ class Rectangulation():
             self.north_neighbours,
             keep_feasible=keep_feasible
             )
-        # self.nonlinear_constr = nonlinear_constraints(
-        #     self.east_graph, 
-        #     self.north_graph, 
-        #     self.holes_idxs,
-        #     keep_feasible=keep_feasible
-        #     )
+        self.holes_constr = hole_closing_constraints(
+            self.holes_idxs, 
+            self.clinched_rectangles, 
+            keep_feasible=keep_feasible
+            )
         self.nonlinear_constr = nonlinear_constraints(
-            self.holes_idxs,
-            self.clinched_rectangles,
             keep_feasible=keep_feasible
         )
+        self.constraints = self.linear____constr + self.holes_constr #+ self.nonlinear_constr
+        # for reporting
+        self.lin_report = self.linear____constr + self.holes_constr
+        self.non_lin_report = self.nonlinear_constr
+
     def close_holes(self):
         self.sol = minimize(
             fun= lambda x : objective (x, clinched_rectangles=self.clinched_rectangles), 
             x0=self.x0,
             jac=True, 
             method='trust-constr', 
-            constraints= self.linear____constr + self.nonlinear_constr,
+            constraints= self.constraints,
             bounds = self.bounds,
             tol=1e-10)
         self.closed = self.sol.x.reshape(-1,4)
 
-    def report(self, closed_Q:bool = False): # FIX add argument to decide if clinched  OR clinched and closed
+
+    def report(self, closed_Q:bool = False, digits=2): # FIX add argument to decide if clinched  OR clinched and closed
         clinch:np.ndarray = self.clinched_rectangles
         closed:np.ndarray = self.closed if closed_Q is True else 0
         non_lin_const:NonlinearConstraint
         lin_const:LinearConstraint
         if closed_Q is True:
-            print('---- AREA AND HOLES CONSTRAINTS------------------------------------------')
-            for non_lin_const in self.nonlinear_constr:
-                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.2f}, closed: {non_lin_const.fun(closed.flatten()):.2f}\
+            print('---- non-LIN CONSTRAINTS ------------------------------------------')
+            for non_lin_const in self.non_lin_report:
+                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.{digits}f}, closed: {non_lin_const.fun(closed.flatten()):.{digits}f}\
             lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
-            print('\n----INITIAL CONTACT AND BOUNDARIES---------------------------------------')
-            for lin_const in self.linear____constr:
-                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.2f}, closed: {lin_const.A.dot(closed.flatten()).sum():.2f}\
+            print('\n-------- LIN CONSTRAINTS ------------------------------------------')
+            for lin_const in self.lin_report:
+                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.{digits}f}, closed: {lin_const.A.dot(closed.flatten()).sum():.{digits}f}\
             lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
         else:
-            print('---- AREA AND HOLES CONSTRAINTS------------------------------------------')
-            for non_lin_const in self.nonlinear_constr:
-                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.2f}, lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
-            print('\n----INITIAL CONTACT AND BOUNDARIES---------------------------------------')
-            for lin_const in self.linear____constr:
-                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.2f}, lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
+            print('---- non-LIN CONSTRAINTS ------------------------------------------')
+            for non_lin_const in self.non_lin_report:
+                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.{digits}f}, lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
+            print('\n-------- LIN CONSTRAINTS ------------------------------------------')
+            for lin_const in self.lin_report:
+                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.{digits}f}, lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
 
     def draw(self, disjoint:bool, inflated:bool, closed:bool, size:int=5):
         num_of_axes = np.array([disjoint, inflated, closed]).sum()

@@ -5,11 +5,15 @@ import networkx as nx
 #### Distance
 def dist_sqrd(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
     arr = arg.reshape(-1,4)
-    return LA.norm(arr - clinched_rectangles)**2
+    return LA.norm(arr - clinched_rectangles)
 
 def dist_grad(arg:np.ndarray, clinched_rectangles:np.ndarray=np.array([])):
-    arr = arg.reshape(-1,4)
-    return (2*(arr - clinched_rectangles)).flatten()
+    arr = arg.reshape(-1, 4)
+    if np.allclose(arr, clinched_rectangles) is True:
+        grad = np.zeros(shape=arr.shape).flatten()
+    else:
+        grad = ((arr - clinched_rectangles)/LA.norm(arr - clinched_rectangles)).flatten()
+    return grad
 
 #### Objective
 def objective (arg, clinched_rectangles):

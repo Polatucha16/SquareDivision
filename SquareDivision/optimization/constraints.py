@@ -6,77 +6,114 @@ from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidenc
 # from SquareDivision.holes.detect import find_holes
 from SquareDivision.holes.detect import hole_closing_idxs
 
+# def low_boundary_constraint_args(
+#     clinched_rectangles:np.ndarray, 
+#     upper_neighbours:np.ndarray, 
+#     axis:int):
+#     """ Return table and rhs for constraints: (examples for X axis)
+#             x_i = 0
+#         for those rectangles which are on: 
+#             left side (axis = 0)
+#             bottom (axis = 1)
+#         of [0, 1] x [0, 1] square.
+#         Arguments :
+#             clinched_rectangles : (n, 4) array [x, y, width, height]
+#             upper_neighbours    : (n, n) array 
+#                 i-th row represet the east or north neighbours of i-th rectangle
+#                 placing 1 in j-th place if i-th rectangle is in contact with j-th rectangle
+#                 (incidence matrix of horizontal or vertical contact grah between rectangles)
+#             axis                : indicator if we mean horizontal or vertical lower boundary.
+#         """
+#     shape = clinched_rectangles.shape
+#     arg_len = np.prod(shape)
+#     a = np.zeros(shape=(arg_len, arg_len))
+#     rhs_lower = np.zeros(shape=(arg_len,))
+#     for rect_num in range(shape[0]):
+#         if np.sum(upper_neighbours.T[rect_num]) == 0:
+#             # rectangle do not apper as an upper neighbour 
+#             # of any other rectangle => it is on lower boundary
+#             idx = np.ravel_multi_index((rect_num, axis), shape)
+#             a[idx, idx] = 1
+#     return a, rhs_lower
+
 def low_boundary_constraint_args(
     clinched_rectangles:np.ndarray, 
     upper_neighbours:np.ndarray, 
     axis:int):
     """ Return table and rhs for constraints: (examples for X axis)
-            x_i = 0
-        for those rectangles which are on: 
-            left side (axis = 0)
-            bottom (axis = 1)
-        of [0, 1] x [0, 1] square.
-        Arguments :
-            clinched_rectangles : (n, 4) array [x, y, width, height]
-            upper_neighbours    : (n, n) array 
-                i-th row represet the east or north neighbours of i-th rectangle
-                placing 1 in j-th place if i-th rectangle is in contact with j-th rectangle
-                (incidence matrix of horizontal or vertical contact grah between rectangles)
-            axis                : indicator if we mean horizontal or vertical lower boundary.
-        """
-    # n, cols = clinched_rectangles.shape
-    # id_lower = np.zeros(shape=(cols * n, cols * n))
-    # for rect_num in range(n):
-    #     if np.sum(upper_neighbours.T[rect_num]) == 0:
-    #         idx = cols * rect_num + axis
-    #         id_lower[idx, idx] = 1
-    # rhs_lower = np.zeros(shape=(cols * n,))
-
+        x_i == 0
+    for those rectangles which are on: 
+        left side (axis = 0)
+        bottom (axis = 1)
+    of [0, 1] x [0, 1] square.
+    Arguments :
+        clinched_rectangles : (n, 4) array [x, y, width, height]
+        upper_neighbours    : (n, n) array 
+            i-th row represet the east or north neighbours of i-th rectangle
+            placing 1 in j-th place if i-th rectangle is in contact with j-th rectangle
+            (incidence matrix of horizontal or vertical contact grah between rectangles)
+        axis                : indicator if we mean horizontal or vertical lower boundary.
+    """
     shape = clinched_rectangles.shape
-    arg_len = np.prod(shape)
-    a = np.zeros(shape=(arg_len, arg_len))
-    rhs_lower = np.zeros(shape=(arg_len,))
-    for rect_num in range(shape[0]):
-        if np.sum(upper_neighbours.T[rect_num]) == 0:
-            # rectangle do not apper as an upper neighbour 
-            # of any other rectangle => it is on lower boundary
-            idx = np.ravel_multi_index((rect_num, axis), shape)
-            a[idx, idx] = 1
-    return a, rhs_lower
+    rects_on_low_boundary = np.where(np.sum(upper_neighbours, axis=0) == 0)[0]
+    num_of_EQ = len(rects_on_low_boundary)
+    # shape of output
+    arg_A = np.zeros(shape=(num_of_EQ, np.prod(shape)) )
+    rhs = np.zeros(shape=(num_of_EQ,))
+    # where are low_boundary rects positions after flattening:
+    idxs = np.ravel_multi_index((rects_on_low_boundary, axis), shape)
+    for num, idx in enumerate(idxs):
+        arg_A[num, idx] = 1
+    return arg_A, rhs
 
 def high_boundary_constraint_args(
     clinched_rectangles:np.ndarray, 
     upper_neighbours:np.ndarray, 
     axis:int):
     """ Return table and rhs for constraints: (examples for X axis)
-            x_i + w_i = 1
-        for those rectangles which are on: 
-            right side (axis = 0)
-            top (axis = 1)
-        of [0, 1] x [0, 1] square.
-        """
-    # n, cols   = clinched_rectangles.shape
-    # id_upper  = np.zeros(shape=(cols * n, cols * n))
-    # rhs_upper = np.zeros(shape=(cols * n,))
-    # for rect_num in range(n):
-    #     if np.sum(upper_neighbours[rect_num]) == 0:
-    #         # rectangle has no upper neighbours => it is on upper boundary
-    #         idx = cols * rect_num + axis
-    #         id_upper[idx, idx], id_upper[idx, idx + 2] = 1, 1
-    #         rhs_upper[ idx ] = 1
-    
+        x_i + w_i == 1
+    for those rectangles which are on: 
+        right side (axis = 0)
+        top (axis = 1)
+    of [0, 1] x [0, 1] square.
+    """
     shape = clinched_rectangles.shape
-    arg_len = np.prod(shape)
-    a = np.zeros(shape=(arg_len, arg_len))
-    rhs_upper = np.zeros(shape=(arg_len,))
-    for rect_num in range(shape[0]):
-        if np.sum(upper_neighbours[rect_num]) == 0:
-            # rectangle has no upper neighbours => it is on upper boundary
-            idx_pos = np.ravel_multi_index((rect_num, axis), shape)
-            idx_size = np.ravel_multi_index((rect_num, axis + 2), shape)
-            a[idx_pos, idx_pos], a[idx_pos, idx_size] = 1, 1
-            rhs_upper[ idx_pos ] = 1
-    return a, rhs_upper
+    rects_on_high_boundary = np.where(np.sum(upper_neighbours, axis=1) == 0)[0]
+    num_of_EQ = len(rects_on_high_boundary)
+    # shape of output
+    arg_A = np.zeros(shape=(num_of_EQ, np.prod(shape)) )
+    rhs = np.ones(shape=(num_of_EQ,))
+    # where are high_boundary rects positions after flattening:
+    idxs = np.ravel_multi_index((rects_on_high_boundary, axis), shape)
+    for num, idx in enumerate(idxs):
+        arg_A[num, [idx, idx + 2]] = 1
+    return arg_A, rhs
+
+
+
+# def high_boundary_constraint_args(
+#     clinched_rectangles:np.ndarray, 
+#     upper_neighbours:np.ndarray, 
+#     axis:int):
+#     """ Return table and rhs for constraints: (examples for X axis)
+#             x_i + w_i = 1
+#         for those rectangles which are on: 
+#             right side (axis = 0)
+#             top (axis = 1)
+#         of [0, 1] x [0, 1] square.
+#         """
+#     shape = clinched_rectangles.shape
+#     arg_len = np.prod(shape)
+#     a = np.zeros(shape=(arg_len, arg_len))
+#     rhs_upper = np.zeros(shape=(arg_len,))
+#     for rect_num in range(shape[0]):
+#         if np.sum(upper_neighbours[rect_num]) == 0:
+#             # rectangle has no upper neighbours => it is on upper boundary
+#             idx_pos = np.ravel_multi_index((rect_num, axis), shape)
+#             idx_size = np.ravel_multi_index((rect_num, axis + 2), shape)
+#             a[idx_pos, idx_pos], a[idx_pos, idx_size] = 1, 1
+#             rhs_upper[ idx_pos ] = 1
+#     return a, rhs_upper
 
 def contact_constraint_args(
     clinched_rectangles:np.ndarray, 
@@ -145,7 +182,6 @@ def hole_orientation(hole_closing_idxs, east_graph:nx.Graph, north_graph:nx.Grap
         return 'right'
     elif (right, up) in north_graph.edges:
         return 'left'
-
 
 def factors_of_4_way_hole(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
     """ Nonlinear constraint from closing hole between:
@@ -242,40 +278,33 @@ def hole_width_height(hole_closing_idxs, clinched_rectangles:np.ndarray):
     height= u[1] - (d[1] + d[3])
     return width, height
 
-def closing_holes_brutal(x:np.ndarray, hole_closing_idxs:list, clinched_rectangles:np.ndarray):
-    arr:np.ndarray = x.reshape(-1, 4)
+def linear_args_closing_holes_brutal(hole_closing_idxs:list, clinched_rectangles:np.ndarray):
+    """ Return A , lb, ub for LinearConstraint class"""
+    # set up
+    shape = clinched_rectangles.shape
+    arg_len = np.prod(shape)
+    arg_A = np.zeros(shape=(arg_len))
+    lb, ub = 0, 0
     [[left, right], [down, up]] = hole_closing_idxs
-    l, r = arr[left], arr[right]
-    d, u = arr[down], arr[up]
+    # hole prospecting
     hole_size = hole_width_height(hole_closing_idxs, clinched_rectangles)
     axis_to_close = np.argmin(hole_size)
     if axis_to_close == 0:
-        # width is smaller => contact left to right
-        return r[0] - (l[0] + l[2])
+        # width is smaller => contact left to right : rx - (lx + lw) == 0
+        # where rx - x-pos of right, lx - x-pos of left, lw - width of left
+        rx = np.ravel_multi_index((right, 0), shape)
+        lx = np.ravel_multi_index((left, 0), shape)
+        lw = np.ravel_multi_index((left, 2), shape)
+        arg_A[[rx, lx, lw]] = np.array([-1, 1, 1])
+        return arg_A, lb, ub
     else:
-        # height is smaller => contact down to up
-        return u[1] - (d[1] + d[3])
-
-def closing_holes_brutal_jac(x:np.ndarray, hole_closing_idxs:list, clinched_rectangles:np.ndarray):
-    arr:np.ndarray = x.reshape(-1, 4)
-    jac = np.zeros(shape=arr.shape)
-    [[left, right], [down, up]] = hole_closing_idxs
-    hole_size = hole_width_height(hole_closing_idxs, clinched_rectangles)
-    axis_to_close = np.argmin(hole_size)
-    if axis_to_close == 0:
-        # width is smaller => contact left to right
-        jac[[left, right]] == np.array(
-               [[-1, 0,-1, 0],
-                [ 1, 0, 0, 0],]
-            )
-        return jac.flatten()
-    else:
-        # height is smaller => contact down to up
-        jac[[down, up]] == np.array(
-               [[ 0,-1, 0,-1],
-                [ 0, 1, 0, 0],]
-            )
-        return jac.flatten()
+        # height is smaller => contact down to up : uy - (dy + dh) == 0
+        # where uy - y-pos of up, dy - y-pos of down, dh - height of down
+        uy = np.ravel_multi_index((up, 1), shape)
+        dy = np.ravel_multi_index((down, 1), shape)
+        dh = np.ravel_multi_index((down, 3), shape)
+        arg_A[[uy, dy, dh]] = np.array([-1, 1, 1])
+        return arg_A, lb, ub
 
 # def closing_holes_4_way_jac(x:np.ndarray, hole_closing_idxs:list, east_graph:nx.Graph, north_graph:nx.Graph):
 #     arr:np.ndarray = x.reshape(-1, 4)
@@ -381,14 +410,14 @@ def area_constraint_fun(x:np.ndarray):
         argument x is flattened array of shape <clinched_rectangles>"""
     arr:np.ndarray = x.reshape(-1, 4)
     width, height =  arr[:,2], arr[:,3]
-    return np.abs(1 - width.dot(height))
+    return 1 - width.dot(height)
 
 def area_jac(x:np.ndarray):
     """ Calculates the jacobian of area_constraint_fun at x"""
     arr:np.ndarray = x.reshape(-1, 4)
     width, height =  arr[:,2], arr[:,3]
     jac:np.ndarray = np.zeros(shape=arr.shape)
-    jac[:,2:] = (-1) *np.sign(1 - width.dot(height))* arr[:,[3,2]]
+    jac[:,2:] = (-1) * arr[:,[3,2]]
     return jac.flatten()
 
 def linear_constraints(clinched_rectangles, east_neighbours, north_neighbours, keep_feasible=True):
@@ -459,24 +488,41 @@ def linear_constraints(clinched_rectangles, east_neighbours, north_neighbours, k
 #     constr_list.extend(holes_constraints)
 #     return constr_list
 
-def nonlinear_constraints(idxs_to_close, clinched_rectangles, keep_feasible=True):
-    constr_list = []
+def hole_closing_constraints(idxs_to_close, clinched_rectangles, keep_feasible=True):
     holes_constraints = []
     for idx_pair in idxs_to_close:
+        arg_A, lb, ub = linear_args_closing_holes_brutal(idx_pair, clinched_rectangles)
         holes_constraints.append(
-            NonlinearConstraint(
-                fun=lambda x, hole_closing_idxs=idx_pair : closing_holes_brutal(
-                    x, 
-                    hole_closing_idxs,
-                    clinched_rectangles=clinched_rectangles),
-                jac=lambda x, hole_closing_idxs=idx_pair : closing_holes_brutal_jac(
-                    x, 
-                    hole_closing_idxs,
-                    clinched_rectangles=clinched_rectangles),
-                lb=0, ub=0,
-                keep_feasible=keep_feasible
-            )
+            LinearConstraint(A=arg_A, lb=lb, ub=ub, keep_feasible=keep_feasible)
         )
-    constr_list.extend(holes_constraints)
+    return holes_constraints
+
+def nonlinear_constraints(keep_feasible=True): #idxs_to_close, clinched_rectangles,
+    constr_list = []
+    # area constraint 
+    constr_list.append(
+        NonlinearConstraint(
+            fun=area_constraint_fun,
+            jac=area_jac, 
+            lb=0, ub=0,
+            keep_feasible=keep_feasible)
+    )
+    # holes_constraints = []
+    # for idx_pair in idxs_to_close:
+    #     holes_constraints.append(
+    #         NonlinearConstraint(
+    #             fun=lambda x, hole_closing_idxs=idx_pair : closing_holes_brutal(
+    #                 x, 
+    #                 hole_closing_idxs,
+    #                 clinched_rectangles=clinched_rectangles),
+    #             jac=lambda x, hole_closing_idxs=idx_pair : closing_holes_brutal_jac(
+    #                 x, 
+    #                 hole_closing_idxs,
+    #                 clinched_rectangles=clinched_rectangles),
+    #             lb=0, ub=0,
+    #             keep_feasible=keep_feasible
+    #         )
+    #     )
+    # constr_list.extend(holes_constraints)
     return constr_list
     

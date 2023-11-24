@@ -95,7 +95,7 @@ def hole_width_height(hole_closing_idxs, clinched_rectangles:np.ndarray):
     return width, height
 
 def linear_args_closing_holes_brutal(hole_closing_idxs:list, clinched_rectangles:np.ndarray):
-    """ Return A , lb, ub for LinearConstraint class"""
+    """ Return A , lb, ub for LinearConstraint class closing hole stored in <hole_closing_idxs>"""
     # set up
     shape = clinched_rectangles.shape
     arg_len = np.prod(shape)
@@ -108,9 +108,9 @@ def linear_args_closing_holes_brutal(hole_closing_idxs:list, clinched_rectangles
     if axis_to_close == 0:
         # width is smaller => contact left to right : rx - (lx + lw) == 0
         # where rx - x-pos of right, lx - x-pos of left, lw - width of left
-        rx = np.ravel_multi_index((right, 0), shape)
-        lx = np.ravel_multi_index((left, 0), shape)
-        lw = np.ravel_multi_index((left, 2), shape)
+        rx, lx, lw = np.ravel_multi_index([[right, left, left], [0, 0, 2]], shape)
+        # lx = np.ravel_multi_index([left, 0], shape)
+        # lw = np.ravel_multi_index([left, 2], shape)
         arg_A[[rx, lx, lw]] = np.array([-1, 1, 1])
         return arg_A, lb, ub
     else:
@@ -122,58 +122,59 @@ def linear_args_closing_holes_brutal(hole_closing_idxs:list, clinched_rectangles
         arg_A[[uy, dy, dh]] = np.array([-1, 1, 1])
         return arg_A, lb, ub
 
-def area_constraint_fun(x:np.ndarray):
-    """ Nonlinear constraints
-        argument x is flattened array of shape <clinched_rectangles>"""
-    arr:np.ndarray = x.reshape(-1, 4)
-    width, height =  arr[:,2], arr[:,3]
-    return 1 - width.dot(height)
+# def area_constraint_fun(x:np.ndarray):
+#     """ Nonlinear constraints
+#         argument x is flattened array of shape <clinched_rectangles>"""
+#     arr:np.ndarray = x.reshape(-1, 4)
+#     width, height =  arr[:,2], arr[:,3]
+#     return 1 - width.dot(height)
 
-def area_jac(x:np.ndarray):
-    """ Calculates the jacobian of area_constraint_fun at x"""
-    arr:np.ndarray = x.reshape(-1, 4)
-    width, height =  arr[:,2], arr[:,3]
-    jac:np.ndarray = np.zeros(shape=arr.shape)
-    jac[:,2:] = (-1) * arr[:,[3,2]]
-    return jac.flatten()
+# def area_jac(x:np.ndarray):
+#     """ Calculates the jacobian of area_constraint_fun at x"""
+#     arr:np.ndarray = x.reshape(-1, 4)
+#     width, height =  arr[:,2], arr[:,3]
+#     jac:np.ndarray = np.zeros(shape=arr.shape)
+#     jac[:,2:] = (-1) * arr[:,[3,2]]
+#     return jac.flatten()
 
-def linear_constraints(clinched_rectangles, east_neighbours, north_neighbours, keep_feasible=True):
+# def linear_constraints(clinched_rectangles, east_neighbours, north_neighbours, keep_feasible=True):
 
-    # boundary rectangles constraints
-    low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
-    low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
-    high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
-    high_Y_A, high_Y_rhs = high_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
-    low__X_constr = LinearConstraint( A=low__X_A, lb=low__X_rhs, ub=low__X_rhs, keep_feasible=keep_feasible)
-    low__Y_constr = LinearConstraint( A=low__Y_A, lb=low__Y_rhs, ub=low__Y_rhs, keep_feasible=keep_feasible)
-    high_X_constr = LinearConstraint( A=high_X_A, lb=high_X_rhs, ub=high_X_rhs, keep_feasible=keep_feasible)
-    high_Y_constr = LinearConstraint( A=high_Y_A, lb=high_Y_rhs, ub=high_Y_rhs, keep_feasible=keep_feasible)
+#     # boundary rectangles constraints
+#     low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+#     low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+#     high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+#     high_Y_A, high_Y_rhs = high_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+#     low__X_constr = LinearConstraint( A=low__X_A, lb=low__X_rhs, ub=low__X_rhs, keep_feasible=keep_feasible)
+#     low__Y_constr = LinearConstraint( A=low__Y_A, lb=low__Y_rhs, ub=low__Y_rhs, keep_feasible=keep_feasible)
+#     high_X_constr = LinearConstraint( A=high_X_A, lb=high_X_rhs, ub=high_X_rhs, keep_feasible=keep_feasible)
+#     high_Y_constr = LinearConstraint( A=high_Y_A, lb=high_Y_rhs, ub=high_Y_rhs, keep_feasible=keep_feasible)
 
-    # constacts from constact graphs
-    cont_X_A, cont_X_rhs = contact_constraint_args(clinched_rectangles, east_neighbours, axis=0)
-    cont_Y_A, cont_Y_rhs = contact_constraint_args(clinched_rectangles, north_neighbours, axis=1)
-    horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs, keep_feasible=keep_feasible)
-    vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs, keep_feasible=keep_feasible)
+#     # constacts from constact graphs
+#     cont_X_A, cont_X_rhs = contact_constraint_args(clinched_rectangles, east_neighbours, axis=0)
+#     cont_Y_A, cont_Y_rhs = contact_constraint_args(clinched_rectangles, north_neighbours, axis=1)
+#     horizontal_contacts = LinearConstraint( A=cont_X_A, lb=cont_X_rhs, ub=cont_X_rhs, keep_feasible=keep_feasible)
+#     vertical___contacts = LinearConstraint( A=cont_Y_A, lb=cont_Y_rhs, ub=cont_Y_rhs, keep_feasible=keep_feasible)
 
 
-    constr_list = [
-        low__X_constr, low__Y_constr,
-        high_X_constr, high_Y_constr,
-        horizontal_contacts,
-        vertical___contacts,
-        ]
-    return constr_list
+#     constr_list = [
+#         low__X_constr, low__Y_constr,
+#         high_X_constr, high_Y_constr,
+#         horizontal_contacts,
+#         vertical___contacts,
+#         ]
+#     return constr_list
 
-def hole_closing_constraints(idxs_to_close, clinched_rectangles, keep_feasible=True):
-    holes_constraints = []
-    for idx_pair in idxs_to_close:
-        arg_A, lb, ub = linear_args_closing_holes_brutal(idx_pair, clinched_rectangles)
-        holes_constraints.append(
-            LinearConstraint(A=arg_A, lb=lb, ub=ub, keep_feasible=keep_feasible)
-        )
-    return holes_constraints
+# def hole_closing_constraints(idxs_to_close, clinched_rectangles, keep_feasible=True):
+#     holes_constraints = []
+#     for idx_pair in idxs_to_close:
+#         arg_A, lb, ub = linear_args_closing_holes_brutal(idx_pair, clinched_rectangles)
+#         holes_constraints.append(
+#             LinearConstraint(A=arg_A, lb=lb, ub=ub, keep_feasible=keep_feasible)
+#         )
+#     return holes_constraints
 
 def linear_constraint(clinched_rectangles, east_neighbours, north_neighbours, idxs_to_close, keep_feasible=True):
+    """ Joining linear constraints into one LinearConstraint object"""
     low__X_A, low__X_rhs = low_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)
     low__Y_A, low__Y_rhs = low_boundary_constraint_args(clinched_rectangles, north_neighbours, axis=1)
     high_X_A, high_X_rhs = high_boundary_constraint_args(clinched_rectangles, east_neighbours, axis=0)

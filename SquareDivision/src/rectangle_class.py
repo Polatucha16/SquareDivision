@@ -26,7 +26,8 @@ from SquareDivision.contact_graph.incidence_matrix import (
     contact_graph_incidence_matrix
 )
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
-from SquareDivision.optimization.constraints import linear_constraints, hole_closing_constraints, linear_constraint
+from SquareDivision.projection.orthogonal import orth_proj_onto_affine_L
+from SquareDivision.optimization.constraints import linear_constraint #linear_constraints, hole_closing_constraints, linear_constraint
 from SquareDivision.optimization.objective_function import objective#, ratio_demand_cost
 from SquareDivision.optimization.bounds import bounds_trust_constr
 from SquareDivision.optimization.initial_guess import contact_universal_x0
@@ -95,21 +96,20 @@ class Rectangulation():
         self.graph_processing()
     
     def prepare_constraints(self, keep_feasible=True):
-        # self.x0 = contact_universal_x0(self.clinched_rectangles)
         self.x0 = self.clinched_rectangles.flatten()
 
         self.bounds = bounds_trust_constr(self.clinched_rectangles, keep_feasible=keep_feasible)
-        self.linear____constr = linear_constraints(
-            self.clinched_rectangles, 
-            self.east_neighbours, 
-            self.north_neighbours,
-            keep_feasible=keep_feasible
-            )
-        self.holes_constr = hole_closing_constraints(
-            self.holes_idxs, 
-            self.clinched_rectangles, 
-            keep_feasible=keep_feasible
-            )
+        # self.linear____constr = linear_constraints(
+        #     self.clinched_rectangles, 
+        #     self.east_neighbours, 
+        #     self.north_neighbours,
+        #     keep_feasible=keep_feasible
+        #     )
+        # self.holes_constr = hole_closing_constraints(
+        #     self.holes_idxs, 
+        #     self.clinched_rectangles, 
+        #     keep_feasible=keep_feasible
+        #     )
         self.constraint = linear_constraint(
             self.clinched_rectangles, 
             self.east_neighbours, 
@@ -117,45 +117,22 @@ class Rectangulation():
             self.holes_idxs,
             keep_feasible=keep_feasible
         )
-        # self.constraints = self.linear____constr + self.holes_constr
-        self.constraints = self.constraint
-        # for reporting
-        self.lin_report = self.linear____constr + self.holes_constr
-        self.non_lin_report = []
 
     def close_holes(self):
-        self.sol = minimize(
-            fun= lambda x : objective (x, clinched_rectangles=self.clinched_rectangles), 
-            x0=self.x0,
-            jac=True, 
-            method='trust-constr', 
-            constraints= self.constraints,
-            bounds = self.bounds,
-            tol=1e-10)
-        self.closed = self.sol.x.reshape(-1,4)
+        self.sol = orth_proj_onto_affine_L(self.x0, self.constraint.A, self.constraint.lb)
+        self.closed = self.sol.reshape(-1,4)
 
-
-    def report(self, closed_Q:bool = False, digits=2): # FIX add argument to decide if clinched  OR clinched and closed
-        clinch:np.ndarray = self.clinched_rectangles
-        closed:np.ndarray = self.closed if closed_Q is True else 0
-        non_lin_const:NonlinearConstraint
-        lin_const:LinearConstraint
-        if closed_Q is True:
-            print('---- non-LIN CONSTRAINTS ------------------------------------------')
-            for non_lin_const in self.non_lin_report:
-                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.{digits}f}, closed: {non_lin_const.fun(closed.flatten()):.{digits}f}\
-            lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
-            print('\n-------- LIN CONSTRAINTS ------------------------------------------')
-            for lin_const in self.lin_report:
-                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.{digits}f}, closed: {lin_const.A.dot(closed.flatten()).sum():.{digits}f}\
-            lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
+    def report(self, tol=0.03, digits = 3):
+        """ report relative distances between rectangles in clinched_rectangles and closed"""
+        relative_diff = np.linalg.norm(self.clinched_rectangles-self.closed, axis=1)/np.linalg.norm(self.clinched_rectangles, axis=1)
+        order = np.argsort(relative_diff)[::-1]
+        rel_diff_ord = relative_diff[order] # sorted form the higiest to lowest 
+        touched_beyoned_tolerance = np.where(rel_diff_ord > tol)[0]
+        if len(touched_beyoned_tolerance) > 0:
+            for no in touched_beyoned_tolerance:
+                print(f'rectangle no.{order[no]:>3} relatively changed by {rel_diff_ord[no]:>{digits+3}.{digits}f} ')
         else:
-            print('---- non-LIN CONSTRAINTS ------------------------------------------')
-            for non_lin_const in self.non_lin_report:
-                print(f'clinch: {non_lin_const.fun(clinch.flatten()):.{digits}f}, lower bound = {non_lin_const.lb}, upper bound = {non_lin_const.ub}')
-            print('\n-------- LIN CONSTRAINTS ------------------------------------------')
-            for lin_const in self.lin_report:
-                print(f'clinch: {lin_const.A.dot(clinch.flatten()).sum():.{digits}f}, lower bound = {lin_const.lb.sum()}, upper bound = {lin_const.ub.sum()}')
+            print(f'All rectangles within tolerace')
 
     def draw(self, disjoint:bool, inflated:bool, closed:bool, size:int=5):
         num_of_axes = np.array([disjoint, inflated, closed]).sum()

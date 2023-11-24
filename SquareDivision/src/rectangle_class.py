@@ -8,7 +8,12 @@ import networkx as nx
 
 import matplotlib.pyplot as plt
 
-from SquareDivision.src.distributions import x_plus_y_func, tepui
+from SquareDivision.src.distributions import (
+    x_plus_y_func, 
+    tepui, 
+    CentersGenerationStrategy,
+    RngDistribution,
+    WidthHeightStrategy,)
 from SquareDivision.src.generators import uniform_pts
 from SquareDivision.src.dataflow import (
     find_anchors_and_crop,
@@ -29,10 +34,23 @@ from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
 from SquareDivision.config import config
 
 
+
 class Rectangulation():
     def __init__(self, config=config):
         self.rng:Generator = np.random.default_rng(config['seed'])
     
+    def sample_centers(self, strategy:CentersGenerationStrategy, **kwargs):
+        self.centers = strategy.generate(**kwargs)
+    
+    def sample_size(self, startegy:WidthHeightStrategy, **kwargs):
+        return startegy.generate(**kwargs)
+    
+    def sample_widths(self, **kwargs):
+        self.widths = self.sample_size(**kwargs)
+
+    def sample_heights(self, **kwargs):
+        self.heights = self.sample_size(**kwargs)
+
     def load_distributions(self, fun = x_plus_y_func):
         # this needs to be changed to accept two functions maybe to strategy?
         self.func = functools.partial(fun,

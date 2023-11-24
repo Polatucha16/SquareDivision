@@ -4,6 +4,76 @@ from typing import Callable
 
 from SquareDivision.config import config
 
+from abc import ABC, abstractmethod
+from typing import Callable
+
+# rectangles centers strategies 
+class CentersGenerationStrategy(ABC):
+    @abstractmethod
+    def generate(self, *args, **kwargs) -> np.ndarray:
+        pass
+
+class RngDistribution(CentersGenerationStrategy):
+    """ Returns rng.distribution(**kwargs)"""
+    def generate(self, rng:Generator, distribution:str, **kwargs):
+        return rng.__getattribute__(distribution)(**kwargs)
+    
+class FixedCenters(CentersGenerationStrategy):
+    """ Returns array given"""
+    def generate(self, arr:np.ndarray):
+        return arr
+
+# rectangles width & height strategies
+class WidthHeightStrategy(ABC):
+    @abstractmethod
+    def generate(self, *args, **kwargs) -> np.ndarray:
+        pass
+
+class SizeDistribution(WidthHeightStrategy):
+    def generate(
+            self, 
+            centers:np.ndarray, 
+            size_distribution:Callable, 
+            **kwargs
+        ):
+        """ Feed size_distribution function with centers.
+            size_distribution have the follwing signature:
+            (np.ndarray of shape (N, 2), kwargs) -> np.ndarray of shape (N,)
+            """
+        sizes  =  size_distribution(centers, **kwargs)
+        return sizes
+
+
+class WidthHeightFixed(WidthHeightStrategy):
+    def generate(self, widths, heights):
+        return np.vstack([widths, heights])
+
+def linear_on_position(
+        centers:np.ndarray, 
+        a:np.ndarray=np.array([0.3, 0.3]), 
+        b:float= 0.1
+        ):
+    """ <centers> (N,2) dot broatcasting <a> (2,)"""
+    return centers.dot(a) + b
+
+#change name to tepui later
+def tepui_distribution(
+        centers:np.ndarray,
+        base:float=0.05,
+        top:float=0.3,
+        slope:float=4,
+        vertex:float=1,
+        pts:np.ndarray=np.array(
+            [[0.25, 0.25],
+             [0.75, 0.75]]
+        )
+):
+    """shapes: <centers> (N, 2), <pts> (K, 2)"""
+    tepui_for_point = lambda pt : np.minimum(top, np.maximum(base, vertex - slope * np.min(np.linalg.norm(pts - pt, axis=1))))
+    values = np.apply_along_axis(tepui_for_point, 1, centers)
+    return values
+
+
 def x_plus_y_func(
         x : float,
         y : float,

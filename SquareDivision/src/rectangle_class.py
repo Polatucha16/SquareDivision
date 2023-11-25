@@ -41,16 +41,34 @@ class Rectangulation():
         self.rng:Generator = np.random.default_rng(config['seed'])
     
     def sample_centers(self, strategy:CentersGenerationStrategy, **kwargs):
+        """ Execute strategy to generate centers sample """
         self.centers = strategy.generate(**kwargs)
     
-    def sample_size(self, startegy:WidthHeightStrategy, **kwargs):
-        return startegy.generate(**kwargs)
+    # def sample_size(self, startegy:WidthHeightStrategy, **kwargs):
+    #     return startegy.generate(**kwargs)
     
-    def sample_widths(self, **kwargs):
-        self.widths = self.sample_size(**kwargs)
+    # def sample_widths(self, **kwargs):
+    #     self.widths = self.sample_size(**kwargs)
 
-    def sample_heights(self, **kwargs):
-        self.heights = self.sample_size(**kwargs)
+    # def sample_heights(self, **kwargs):
+    #     self.heights = self.sample_size(**kwargs)
+
+    def sample_widths(self, startegy:WidthHeightStrategy, **kwargs):
+        """ Execute strategy to generate widths sample """
+        self.widths = startegy.generate(**kwargs)
+
+    def sample_heights(self, startegy:WidthHeightStrategy, **kwargs):
+        """ Execute strategy to generate heights sample """
+        self.heights = startegy.generate(**kwargs)
+    
+    def build_rectangles(self, outside_rectangles:np.ndarray=None):
+        """ Joins: self.centers, self.widths, self.heights into self.rectangles,
+                or
+            if outside_rectangles is not None loads is into self.rectangles """
+        if outside_rectangles is None:
+            self.rectangles = np.c_[self.centers, self.widths, self.heights]
+        else:
+            self.rectangles = outside_rectangles
 
     def load_distributions(self, fun = x_plus_y_func):
         # this needs to be changed to accept two functions maybe to strategy?

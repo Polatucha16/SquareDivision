@@ -1,5 +1,3 @@
-import functools
-
 import numpy as np
 from numpy.random._generator import Generator
 from scipy.optimize import minimize
@@ -8,35 +6,21 @@ import networkx as nx
 
 import matplotlib.pyplot as plt
 
-from SquareDivision.src.distributions import (
-    x_plus_y_func,
-    tepui,
-    tepui_distribution,
-    CentersGenerationStrategy,
-    RngDistribution,
-    WidthHeightStrategy,
-    SizeDistribution,
-    linear_on_position,
-)
-from SquareDivision.src.generators import uniform_pts
+from SquareDivision.src.distributions import SizeStrategy
 from SquareDivision.src.dataflow import (
     find_anchors_and_crop,
     sort_by_area,
     remove_smaller,
-    inflate_rectangles,
-    arg_rect_list,
-    rects_from_distributions,
+    inflate_rectangles
 )
 from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
 from SquareDivision.projection.orthogonal import orth_proj_onto_affine_L
-from SquareDivision.optimization.constraints import (
-    linear_constraint,
-)  # linear_constraints, hole_closing_constraints, linear_constraint
+from SquareDivision.optimization.constraints import linear_constraint
 from SquareDivision.optimization.objective_function import (
     objective,
 )  # , ratio_demand_cost
-from SquareDivision.optimization.bounds import bounds_trust_constr
+# from SquareDivision.optimization.bounds import bounds_trust_constr
 from SquareDivision.optimization.initial_guess import contact_universal_x0
 from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
 from SquareDivision.config import config
@@ -46,81 +30,59 @@ class Rectangulation:
     def __init__(self, config=config):
         self.rng: Generator = np.random.default_rng(config["seed"])
 
-    def sample_centers(self, strategy: CentersGenerationStrategy, **kwargs):
-        """Execute strategy to generate centers sample"""
-        self.centers = strategy.generate(**kwargs)
+    def uniform_centers(self, num):
+        self.centers = self.rng.uniform([0, 0], [1, 1], (num, 2))
 
-    # def sample_size(self, startegy:WidthHeightStrategy, **kwargs):
-    #     return startegy.generate(**kwargs)
+    def sample_centers_from(self, distribution, **kwargs):
+        self.centers = self.rng.__getattribute__(distribution)(**kwargs)
 
-    # def sample_widths(self, **kwargs):
-    #     self.widths = self.sample_size(**kwargs)
+    def edit_centers(self, center_edit_strategy):
+        # self.centers = center_edit_strategy.edit(self.centers)
+        pass
 
-    # def sample_heights(self, **kwargs):
-    #     self.heights = self.sample_size(**kwargs)
-
-    def sample_widths(self, startegy: WidthHeightStrategy, **kwargs):
+    def sample_widths(self, startegy: SizeStrategy, **kwargs):
         """Execute strategy to generate widths sample"""
         self.widths = startegy.generate(**kwargs)
 
-    def sample_heights(self, startegy: WidthHeightStrategy, **kwargs):
+    def sample_heights(self, startegy: SizeStrategy, **kwargs):
         """Execute strategy to generate heights sample"""
         self.heights = startegy.generate(**kwargs)
 
-    def build_rectangles(self, num: int = 0, outside_rectangles: np.ndarray = None,**kwargs):
-        """Joins: self.centers, self.widths, self.heights into self.rectangles,
-            or
-        if outside_rectangles is not None loads is into self.rectangles"""
-        if outside_rectangles is not None:
-            self.rectangles = outside_rectangles
-            return
-        # else
-        self.sample_centers(
-            RngDistribution(),
-            rng=self.rng,
-            distribution="uniform",
-            low=[0, 0],
-            high=[1, 1],
-            size=(num, 2),
-        )
+    def sample_rectangles(
+        self, num, widths_strategy: SizeStrategy, heights_strategy: SizeStrategy,
+    ):
+        """Default path of creating rectangles at uniformly drawn centers"""
+        self.uniform_centers(num)
         self.sample_widths(
-            SizeDistribution(),
+            widths_strategy,
             centers=self.centers,
-            size_distribution = tepui_distribution
-            # size_distribution=lambda arg: linear_on_position(
-            #     arg, a=np.array([0.25, 0.0]), b=0.05
-            # ),
         )
         self.sample_heights(
-            SizeDistribution(),
+            heights_strategy,
             centers=self.centers,
-            # size_distribution = tepui_distribution
-            size_distribution=lambda arg: linear_on_position(
-                arg, a=np.array([0.0, 0.25]), b=0.05
-            ),
         )
-        self.arr_sample = np.c_[self.centers, self.widths, self.heights]
+        self.rectangles_sample = np.c_[self.centers, self.widths, self.heights]
 
-    def load_distributions(self, fun=x_plus_y_func):
-        # this needs to be changed to accept two functions maybe to strategy?
-        self.func = functools.partial(
-            fun, min_00=0.025, max_00=0.03, min_11=0.2, max_11=0.3, rng=self.rng
-        )
+    def sample_rectangles_from(
+        self,
+        centers_distribution,
+        centers_kwargs,
+        # center_edit_strategy,
+        widths_strategy,
+        widths_kwargs,
+        heights_strategy,
+        heights_kwargs,
+    ):
+        """Advanced path of creating rectangles"""
+        self.sample_centers_from(centers_distribution, **centers_kwargs)
+        # self.edit_centers(center_edit_strategy)
+        self.sample_widths(widths_strategy, **widths_kwargs)
+        self.sample_heights(heights_strategy, **heights_kwargs)
+        pass
 
-    def sample(self, num=10):
-        # this needs to be changed maybe to strategy?
-        # self.arr_sample = arg_rect_list(num, uniform_pts, self.func, rng=self.rng)
-        self.num = num
-        self.arr_sample = rects_from_distributions(
-            num,
-            pts_func=uniform_pts,
-            width_distribution=tepui(base=0.05, top=0.5, slope=5, vertex=1.5),
-            height_distribution=tepui(base=0.05, top=0.5, slope=5, vertex=1.5),
-            rng=self.rng,
-        )
-
+    #FIX pass algoritm how to create disjoint rectangles from a rectangles_sample
     def find_disjoint_family(self):
-        self.arr = find_anchors_and_crop(self.arr_sample)
+        self.arr = find_anchors_and_crop(self.rectangles_sample)
         self.arr = sort_by_area(self.arr)
         self.arr = remove_smaller(self.arr)
 
@@ -143,31 +105,17 @@ class Rectangulation:
         self.holes_idxs = check_holes(rectangles, self.possible_holes_idxs)
 
     def execute(self, num, **kwargs):
-        self.load_distributions()
-        # self.sample(**kwargs)
-        self.build_rectangles(num)
+        self.sample_rectangles(num, **kwargs)
         self.find_disjoint_family()
         self.inflate()
         self.graph_processing()
 
     def prepare_constraints(self, keep_feasible=True):
         self.x0 = self.clinched_rectangles.flatten()
-
-        self.bounds = bounds_trust_constr(
-            self.clinched_rectangles, keep_feasible=keep_feasible
-        )
-        # self.linear____constr = linear_constraints(
-        #     self.clinched_rectangles,
-        #     self.east_neighbours,
-        #     self.north_neighbours,
-        #     keep_feasible=keep_feasible
-        #     )
-        # self.holes_constr = hole_closing_constraints(
-        #     self.holes_idxs,
-        #     self.clinched_rectangles,
-        #     keep_feasible=keep_feasible
-        #     )
-        self.constraint = linear_constraint(
+        # self.bounds = bounds_trust_constr(
+        #     self.clinched_rectangles, keep_feasible=keep_feasible
+        # )
+        self.constraint:LinearConstraint = linear_constraint(
             self.clinched_rectangles,
             self.east_neighbours,
             self.north_neighbours,
@@ -197,7 +145,12 @@ class Rectangulation:
         else:
             print(f"All rectangles within tolerace")
 
-    def draw(self, disjoint: bool, inflated: bool, closed: bool, size: int = 5):
+    def draw(
+        self, 
+        disjoint: bool=True, disjoint_nums: bool=True,
+        inflated: bool=True, inflated_nums: bool=True,
+        closed: bool=True, closed_nums: bool=True, 
+        size: int = 5):
         num_of_axes = np.array([disjoint, inflated, closed]).sum()
         fig, axes = plt.subplots(
             nrows=1, ncols=num_of_axes, figsize=(num_of_axes * size, size)
@@ -206,14 +159,17 @@ class Rectangulation:
         i = 0
         if disjoint is True:
             axes[i] = draw_rectangles(axes[i], self.arr)
-            axes[i] = rectangle_numbers(axes[i], self.arr)
+            if disjoint_nums is True:
+                axes[i] = rectangle_numbers(axes[i], self.arr)
             i += 1
         if inflated is True:
             axes[i] = draw_rectangles(axes[i], self.clinched_rectangles)
-            axes[i] = rectangle_numbers(axes[i], self.clinched_rectangles)
+            if inflated_nums is True:
+                axes[i] = rectangle_numbers(axes[i], self.clinched_rectangles)
             i += 1
         if closed is True:
             axes[i] = draw_rectangles(axes[i], self.closed)
-            axes[i] = rectangle_numbers(axes[i], self.closed)
+            if closed_nums is True:
+                axes[i] = rectangle_numbers(axes[i], self.closed)
             i += 1
         plt.show()

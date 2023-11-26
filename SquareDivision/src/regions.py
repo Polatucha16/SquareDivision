@@ -119,7 +119,8 @@ def perp_axis(dir: direction):
     return (wall_axis(dir)+1) % 2
 
 def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: direction):
-    """ Return indices of and intervals representing walls opposed to <dir>:
+    """ Return indices (list of True/False of length = len(rect_arr))
+    of and intervals representing walls opposed to <dir>:
             right walls for dir = 'l' (left), 
             upper walls for dir = d (down), and so on
         the half plane of rect in direction <dir>.
@@ -236,8 +237,7 @@ def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: direction):
     return inds, np.c_[anchors, starts, ends]
 
 def intersect_intervals( a0, a1, b0, b1):
-    """ Return True if intervals (a0, a1) and (b0, b1) intersect.
-    """
+    """ Return True if intervals (a0, a1) and (b0, b1) intersect."""
     a_min, a_max = min(a0, a1), max(a0, a1)
     b_min, b_max = min(b0, b1), max(b0, b1)
     min_max = min(a_max, b_max)
@@ -324,7 +324,7 @@ def walls_in_scaled_view(rect:np.ndarray, dir:direction, suspended_walls:np.ndar
 
 mode = Literal['scale', 'push']
 def homogeneous_scale_in_dir_search(rect_num:int, rect_arr:np.ndarray, dir:direction, scale_or_push:mode):
-    """ Return macimal scale to the the first obstacle from rect_arr
+    """ Return maximal scale to the the first obstacle from rect_arr
         in <scale_or_push> expanding of rectangle <rect>
         in the direction <dir>.
     Arguments

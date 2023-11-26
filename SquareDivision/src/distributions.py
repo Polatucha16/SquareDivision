@@ -60,7 +60,7 @@ def linear_on_position(
 def tepui_distribution(
         centers:np.ndarray,
         base:float=0.05,
-        top:float=0.3,
+        top:float=0.45,
         slope:float=4,
         vertex:float=1,
         pts:np.ndarray=np.array(

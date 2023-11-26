@@ -54,7 +54,9 @@ def holes_idxs(clinched_rectangles, holes):
     return closing_idxs
 
 def check_holes(clinched_rectangles, closing_idxs):
-    """ check for rectangles inside holes """
+    """ Check list closing_idxs if hole candiates have other rectangles inside.
+        Return 'fixed' list of indices that do not 
+        contain rectangles from clinched_rectangles family """
     mid_pts = clinched_rectangles[:,:2] + 0.5 * clinched_rectangles[:,2:4]
     to_drop = []
     for i, idxs in enumerate(closing_idxs):
@@ -68,9 +70,8 @@ def check_holes(clinched_rectangles, closing_idxs):
         if (between_X * between_Y).sum() > 0:
             # inside 'hole' there is/are rectangles => it is not a hole
             to_drop.append(i)
-    # remove faulty idxs from closing_idxs
-    if len(to_drop) > 0:
+    if len(to_drop) > 0: # remove faulty idxs from closing_idxs
         fixed = [closing_idxs[i] for i in range(len(closing_idxs)) if i not in to_drop]
-    else:
-        fixed = []
+    else: # return original list as there are no faulty idxs
+        fixed = closing_idxs
     return fixed

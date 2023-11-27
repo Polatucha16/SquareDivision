@@ -1,4 +1,6 @@
 # Retrangulation from given random family
 
-Example of result:\
-<img src="SquareDivision\output_example.png" alt=" 3 stages family of rectangle"/>
+3 stages family of rectangle:\
+<img src="SquareDivision\output_example.png" alt="example"/>
+Widths and heights of initial random rectangles were drawn from the function called tepui:\
+<img src="SquareDivision\tepui_distribution.png" alt="tepui_distribution"/>

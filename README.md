@@ -1,4 +1,4 @@
-# Retrangulation from given random family
+# Retrangulation from random family of rectangles
 
 3 stages of family of rectangles:\
 <img src="SquareDivision\output_example.png" alt="example"/>

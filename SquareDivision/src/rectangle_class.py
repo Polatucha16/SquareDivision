@@ -169,16 +169,19 @@ class Rectangulation:
         i = 0
         if disjoint is True:
             axes[i] = draw_rectangles(axes[i], self.arr)
+            axes[i].set_xlabel('Rectangles sample')
             if disjoint_nums is True:
                 axes[i] = rectangle_numbers(axes[i], self.arr)
             i += 1
         if inflated is True:
             axes[i] = draw_rectangles(axes[i], self.clinched_rectangles)
+            axes[i].set_xlabel('Clinched rectangles')
             if inflated_nums is True:
                 axes[i] = rectangle_numbers(axes[i], self.clinched_rectangles)
             i += 1
         if closed is True:
             axes[i] = draw_rectangles(axes[i], self.closed)
+            axes[i].set_xlabel('Rectangulation')
             if closed_nums is True:
                 axes[i] = rectangle_numbers(axes[i], self.closed)
             i += 1

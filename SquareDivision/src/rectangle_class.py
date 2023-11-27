@@ -1,7 +1,6 @@
 import numpy as np
 from numpy.random._generator import Generator
-from scipy.optimize import minimize
-from scipy.optimize import LinearConstraint, NonlinearConstraint
+from scipy.optimize import LinearConstraint
 import networkx as nx
 
 import matplotlib.pyplot as plt
@@ -11,17 +10,12 @@ from SquareDivision.src.dataflow import (
     find_anchors_and_crop,
     sort_by_area,
     remove_smaller,
-    inflate_rectangles
+    inflate_rectangles,
 )
 from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
 from SquareDivision.projection.orthogonal import orth_proj_onto_affine_L
 from SquareDivision.optimization.constraints import linear_constraint
-from SquareDivision.optimization.objective_function import (
-    objective,
-)  # , ratio_demand_cost
-# from SquareDivision.optimization.bounds import bounds_trust_constr
-from SquareDivision.optimization.initial_guess import contact_universal_x0
 from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
 from SquareDivision.config import config
 
@@ -49,7 +43,10 @@ class Rectangulation:
         self.heights = startegy.generate(**kwargs)
 
     def sample_rectangles(
-        self, num, widths_strategy: SizeStrategy, heights_strategy: SizeStrategy,
+        self,
+        num,
+        widths_strategy: SizeStrategy,
+        heights_strategy: SizeStrategy,
     ):
         """Default path of creating rectangles at uniformly drawn centers"""
         self.uniform_centers(num)
@@ -80,7 +77,7 @@ class Rectangulation:
         self.sample_heights(heights_strategy, **heights_kwargs)
         pass
 
-    #FIX pass algoritm how to create disjoint rectangles from a rectangles_sample
+    # FIX pass algoritm how to create disjoint rectangles from a rectangles_sample
     def find_disjoint_family(self):
         self.arr = find_anchors_and_crop(self.rectangles_sample)
         self.arr = sort_by_area(self.arr)
@@ -110,12 +107,9 @@ class Rectangulation:
         self.inflate()
         self.graph_processing()
 
-    def prepare_constraints(self, keep_feasible=True):
+    def prepare_closing(self, keep_feasible=True):
         self.x0 = self.clinched_rectangles.flatten()
-        # self.bounds = bounds_trust_constr(
-        #     self.clinched_rectangles, keep_feasible=keep_feasible
-        # )
-        self.constraint:LinearConstraint = linear_constraint(
+        self.constraint: LinearConstraint = linear_constraint(
             self.clinched_rectangles,
             self.east_neighbours,
             self.north_neighbours,
@@ -130,12 +124,24 @@ class Rectangulation:
         self.closed = self.sol.reshape(-1, 4)
 
     def report(self, tol=0.03, digits=3):
-        """report relative distances between rectangles in clinched_rectangles and closed"""
-        relative_diff = np.linalg.norm(
-            self.clinched_rectangles - self.closed, axis=1
-        ) / np.linalg.norm(self.clinched_rectangles, axis=1)
+        """Report rectangles relative ratio change between clinched_rectangles and closed"""
+
+        def relative_change(before: np.ndarray, after: np.ndarray):
+            """Return value of function on arrays given by formula:
+            relative_shape_change( before = {x, y}, after = {u, v}) =
+                (1 + x/u + y/v ) * Norm[{x, y} - {u, v}] ** 2
+            """
+            shape = before.shape
+            x_ratios, y_ratios = before[:, 0] / after[:, 0], before[:, 1] / after[:, 1]
+            ones = np.ones(shape=shape[0])
+            coef = np.linalg.norm(before - after, axis=1) ** 2
+            return (ones + x_ratios + y_ratios) * coef
+
+        relative_diff = relative_change(
+            self.clinched_rectangles[:, 2:], self.closed[:, 2:]
+        )
         order = np.argsort(relative_diff)[::-1]
-        rel_diff_ord = relative_diff[order]  # sorted form the higiest to lowest
+        rel_diff_ord = relative_diff[order]
         touched_beyoned_tolerance = np.where(rel_diff_ord > tol)[0]
         if len(touched_beyoned_tolerance) > 0:
             for no in touched_beyoned_tolerance:
@@ -146,11 +152,15 @@ class Rectangulation:
             print(f"All rectangles within tolerace")
 
     def draw(
-        self, 
-        disjoint: bool=True, disjoint_nums: bool=True,
-        inflated: bool=True, inflated_nums: bool=True,
-        closed: bool=True, closed_nums: bool=True, 
-        size: int = 5):
+        self,
+        disjoint: bool = False,
+        disjoint_nums: bool = True,
+        inflated: bool = False,
+        inflated_nums: bool = True,
+        closed: bool = False,
+        closed_nums: bool = True,
+        size: int = 5,
+    ):
         num_of_axes = np.array([disjoint, inflated, closed]).sum()
         fig, axes = plt.subplots(
             nrows=1, ncols=num_of_axes, figsize=(num_of_axes * size, size)

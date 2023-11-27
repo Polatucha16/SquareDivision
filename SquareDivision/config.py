@@ -11,4 +11,7 @@ axis_settings = {
     "xlim": (0 - config["fig_eps"], 1 + config["fig_eps"]),
     "ylim": (0 - config["fig_eps"], 1 + config["fig_eps"]),
     "aspect": "equal",
+    "frame_on": False,
+    "xticks" : [],
+    "yticks" : []
 }

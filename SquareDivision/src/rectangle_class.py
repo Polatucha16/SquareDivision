@@ -80,7 +80,7 @@ class Rectangulation:
         self.sample_heights(heights_strategy, **heights_kwargs)
         pass
 
-    # FIX pass algoritm how to create disjoint rectangles from a rectangles_sample
+    # FIX: pass algoritm how to create disjoint rectangles from a rectangles_sample
     def find_disjoint_family(self):
         self.arr = find_anchors_and_crop(self.rectangles_sample)
         self.arr = sort_by_area(self.arr)
@@ -186,4 +186,22 @@ class Rectangulation:
             if closed_nums is True:
                 axes[i] = rectangle_numbers(axes[i], self.closed)
             i += 1
+        plt.show()
+
+    def draw_contact_graph(self, i:int= 1):
+        """ 
+        0 - rectangle sample
+        1 - clinched
+        2 - closed """
+
+        arr = {0:self.arr, 1:self.clinched_rectangles, 2:self.closed}[i]
+        self.graph_processing(arr)
+        H = nx.from_numpy_array(self.east_neighbours, create_using=nx.DiGraph)
+        V = nx.from_numpy_array(self.north_neighbours, create_using=nx.DiGraph)
+        attrs = { i : {'pos': tuple(row[:2] + 0.5 * row[2:4])} for i, row in enumerate(arr)}
+        nx.set_node_attributes(H, attrs)
+        pos = nx.get_node_attributes(H,'pos')
+        fig, ax = plt.subplots(figsize=(9, 9))
+        nx.draw_networkx(H, pos=pos, ax=ax,  edge_color='tab:blue' )
+        nx.draw_networkx_edges(V, pos=pos, ax=ax, edge_color='tab:red')
         plt.show()

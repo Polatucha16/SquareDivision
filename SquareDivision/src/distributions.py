@@ -103,13 +103,6 @@ class SizeFixed(SizeStrategy):
     def generate(self, widths_or_heights: np.ndarray):
         return widths_or_heights
 
-
-def linear_on_position(
-    centers: np.ndarray, a: np.ndarray = np.array([0.3, 0.3]), b: float = 0.1
-):
-    """<centers> (N,2) dot broatcasting <a> (2,)"""
-    return centers.dot(a) + b
-
 def tepui(
     pt,
     top: float = 0.3,

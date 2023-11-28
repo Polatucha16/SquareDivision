@@ -1,3 +1,7 @@
+from functools import partial
+import matplotlib.pyplot as plt
+from matplotlib import cm
+
 import numpy as np
 from numpy.random._generator import Generator
 from typing import Callable
@@ -89,7 +93,7 @@ class BetweenFunctions(SizeStrategy):
 
     def generate(self, centers: np.ndarray, **kwargs):
         pts_0 = np.apply_along_axis(self.func_0, 1, centers)
-        pts_1 = np.apply_along_axis(self.func_0, 1, centers)
+        pts_1 = np.apply_along_axis(self.func_1, 1, centers)
         pts: np.ndarray = np.abs(np.c_[pts_0, pts_1])
         pts.sort(axis=-1)
         return self.rng.uniform(low=pts[:, 0], high=pts[:, 1])
@@ -106,66 +110,6 @@ def linear_on_position(
     """<centers> (N,2) dot broatcasting <a> (2,)"""
     return centers.dot(a) + b
 
-
-# def x_plus_y_func(
-#     x: float,
-#     y: float,
-#     min_00: float,
-#     max_00: float,
-#     min_11: float,
-#     max_11: float,
-#     rng: Generator,  # = np.random.default_rng(config['seed'])
-# ):
-#     """Random variable (width,height) with the following distibution.
-#     At the point:
-#         (0,0) width is uniform in [min_00, max_00]
-#         (1,1) width is uniform in [min_11, max_11]
-#         for other (x,y) width is uniform on interval which has
-#         endpoints linearly interpolated, depending on x,
-#         from the boudaries above.
-
-#         Distibution of height is analogus.
-
-#         Example of use:
-
-#             import functools
-#             import numpy as np
-#             from numpy.random._generator import Generator
-#             import matplotlib.pyplot as plt
-
-#             from SquareDivision.src.distributions import x_plus_y_func
-#             from SquareDivision.config import figure_settings, axis_settings
-
-#             rng:Generator = np.random.default_rng(1234)
-
-#             func = functools.partial(x_plus_y_func,
-#                                     min_00=0.1, max_00=0.1,
-#                                     min_11=0.3, max_11=0.5)
-
-#             # sample of possible widths, heigths at (x, y)=
-#             x, y, pts = 0.1, 0.9, []
-#             for i in range(10):
-#                 pt = np.array(func(x=x,y=y, rng=rng))
-#                 pts.append(pt)
-#             pts = np.array(pts)
-
-#             fig, ax = plt.subplots(**figure_settings)
-#             ax.set(**axis_settings)
-#             ax.scatter(*pts.T, marker='.')
-#             plt.show()
-
-#     """
-
-#     b_x = (max_11 - max_00) * x + max_00
-#     a_x = (min_11 - min_00) * x + min_00
-#     width = (b_x - a_x) * rng.random() + a_x
-
-#     b_y = (max_11 - max_00) * y + max_00
-#     a_y = (min_11 - min_00) * y + min_00
-#     height = (b_y - a_y) * rng.random() + a_y
-#     return (width, height)
-
-
 def tepui(
     pt,
     top: float = 0.3,
@@ -176,43 +120,10 @@ def tepui(
 ):
     """
     Plot function:
-        from functools import partial
-        import numpy as np
-
-        import matplotlib.pyplot as plt
-        from matplotlib import cm
-
         from SquareDivision.src.distributions import tepui
-
-        x = np.arange(0, 1, 0.01)
-        y = np.arange(0, 1, 0.01)
-
-        X, Y = np.meshgrid(x, y)
-        points = np.array([X,Y])
-
-        func = partial(tepui,
-            top=0.3,
-            bottom=0.05,
-            slope=4.0,
-            vertex=1.0,
-            pts=np.array(
-                [[0.25, 0.25],
-                [0.75, 0.75]]
-                )
-        )
-        Z = np.apply_along_axis(func, 0, points)
-
-        fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
-        ax.set_xlim3d(left=0, right=1)
-        ax.set_ylim3d(bottom=0, top=1)
-        ax.set_zlim3d(bottom=0, top=1)
-        ax.plot_surface(X, Y, Z,
-                        vmin=Z.min(),
-                        vmax=Z.max() + 0.1,
-                        rstride=1, cstride=1,
-                        cmap=cm.terrain
-                        )
-        plt.show()
+        from SquareDivision.draw.draw import draw_func
+        tepui_kwargs = {'bottom': 0.1, 'top': 0.45, 'vertex': 0.6, 'slope': 2}
+        draw_func(tepui, func_kwargs = tepui_kwargs )
     """
     return np.minimum(
         top,
@@ -226,34 +137,10 @@ def surface_perp_to(pt, vect: np.ndarray, val_at_0: float):
     perpendicular to argument vect = (a, b, c) and passing thorough the point (0,0, val_at_0).
     Argument vect cannot have c = 0
     Plot function:
-        from functools import partial
         import numpy as np
-        import matplotlib.pyplot as plt
-        from matplotlib import cm
         from SquareDivision.src.distributions import surface_perp_to
-
-        x = np.arange(0, 1, 0.01)
-        y = np.arange(0, 1, 0.01)
-
-        X, Y = np.meshgrid(x, y)
-        points = np.array([X,Y])
-
-        func = partial(surface_perp_to,
-            vect = np.array([-1, -1, 3]),
-            val_at_0 = 0.2
-        )
-        Z = np.apply_along_axis(func, 0, points)
-
-        fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
-        ax.set_xlim3d(left=0, right=1)
-        ax.set_ylim3d(bottom=0, top=1)
-        ax.set_zlim3d(bottom=0, top=1)
-        ax.plot_surface(X, Y, Z,
-                        vmin=Z.min(),
-                        vmax=Z.max() + 0.1,
-                        rstride=1, cstride=1,
-                        cmap=cm.terrain
-                        )
-        plt.show()
+        from SquareDivision.draw.draw import draw_func
+        surface_perp_to_kwargs = {'vect' : np.array([-1, -1, 3]), 'val_at_0' : 0.2}
+        draw_func(surface_perp_to, func_kwargs = surface_perp_to_kwargs )
     """
     return -vect[:2].dot(pt) / vect[2] + val_at_0

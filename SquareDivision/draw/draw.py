@@ -1,5 +1,8 @@
+from functools import partial
+from typing import Callable
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.patches import Rectangle
@@ -58,3 +61,28 @@ def draw_suspended_walls(ax:Axes, dir, sus_walls):
     if dir == 'd' or dir == 'u':
         ax.scatter(*sus_walls[:,[1,0]].T, marker='.', c='r')
     return ax
+
+def draw_func(func_family:Callable, func_kwargs):
+    """
+    Plot function of type
+        ((2,) np.ndarray, kwargs) -> float
+    in a (0,1)^3 box.
+    """
+    x = np.arange(0, 1, 0.01)
+    y = np.arange(0, 1, 0.01)
+    X, Y = np.meshgrid(x, y)
+    points = np.array([X,Y])
+
+    func = partial(func_family, **func_kwargs)
+    Z = np.apply_along_axis(func, 0, points)
+    fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
+    ax.set_xlim3d(left=0, right=1)
+    ax.set_ylim3d(bottom=0, top=1)
+    ax.set_zlim3d(bottom=0, top=1)
+    ax.plot_surface(X, Y, Z,
+                    vmin=Z.min(),
+                    vmax=Z.max() + 0.1,
+                    rstride=1, cstride=1,
+                    cmap=cm.terrain
+                    )
+    plt.show()

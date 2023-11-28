@@ -2,10 +2,10 @@
 
 3 stages of family of rectangles:\
 <img src="SquareDivision\output_example.png" alt="example"/>
-Widths and heights of initial rectangles were drawn from the function called tepui:\
+Widths and heights of initial rectangles were set by values of the following function:\
 <img src="SquareDivision\tepui_distribution.png" alt="tepui_distribution"/>
 
-How to use:\
+How to use:
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation

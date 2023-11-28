@@ -58,4 +58,5 @@ def contact_graph_incidence_matrix(clinched_rectangles, dir: direction) -> np.nd
     rows = []
     for i, rect in enumerate(clinched_rectangles):
         rows.append(numers_of_contacting_rectangles_in_dir(i, clinched_rectangles, dir))
-    return np.r_[rows]
+    out:np.ndarray = np.r_[rows]
+    return out.astype(int)

@@ -66,16 +66,33 @@ class SizeStrategy(ABC):
 
 
 class FromFunction(SizeStrategy):
+    """At the point (x,y), draw from dirac delta distribution
+    supported in the point func((x,y))"""
+
     def __init__(self, func: Callable):
+        """func : ((2,) np.ndarray, kwargs) -> float"""
         self.func = func
 
     def generate(self, centers: np.ndarray, **kwargs):
-        """Feed size_distribution function with centers.
-        size_distribution have the follwing signature:
-        (np.ndarray of shape (2,), kwargs) -> float
-        """
         values = np.apply_along_axis(self.func, 1, centers)
         return values
+
+
+class BetweenFunctions(SizeStrategy):
+    """At the point (x,y), draw from uniform distribution supported
+    between func_0((x,y)) and func_1((x,y))."""
+
+    def __init__(self, func_0: Callable, func_1: Callable, rng):
+        self.func_0 = func_0
+        self.func_1 = func_1
+        self.rng:Generator = rng
+
+    def generate(self, centers: np.ndarray, **kwargs):
+        pts_0 = np.apply_along_axis(self.func_0, 1, centers)
+        pts_1 = np.apply_along_axis(self.func_0, 1, centers)
+        pts: np.ndarray = np.abs(np.c_[pts_0, pts_1])
+        pts.sort(axis=-1)
+        return self.rng.uniform(low=pts[:, 0], high=pts[:, 1])
 
 
 class SizeFixed(SizeStrategy):
@@ -88,6 +105,7 @@ def linear_on_position(
 ):
     """<centers> (N,2) dot broatcasting <a> (2,)"""
     return centers.dot(a) + b
+
 
 # def x_plus_y_func(
 #     x: float,
@@ -157,47 +175,85 @@ def tepui(
     pts: np.ndarray = np.array([[0.25, 0.25], [0.75, 0.75]]),
 ):
     """
-    Plot function tepui:
-            from functools import partial
-            import numpy as np
+    Plot function:
+        from functools import partial
+        import numpy as np
 
-            import matplotlib.pyplot as plt
-            from matplotlib import cm
+        import matplotlib.pyplot as plt
+        from matplotlib import cm
 
-            from SquareDivision.src.distributions import tepui
+        from SquareDivision.src.distributions import tepui
 
-            x = np.arange(0, 1, 0.01)
-            y = np.arange(0, 1, 0.01)
+        x = np.arange(0, 1, 0.01)
+        y = np.arange(0, 1, 0.01)
 
-            X, Y = np.meshgrid(x, y)
-            points = np.array([X,Y])
+        X, Y = np.meshgrid(x, y)
+        points = np.array([X,Y])
 
-            func = partial(tepui,
-                top=0.3,
-                bottom=0.05,
-                slope=4.0,
-                vertex=1.0,
-                pts=np.array(
-                    [[0.25, 0.25],
-                    [0.75, 0.75]]
-                    )
-            )
-            Z = np.apply_along_axis(func, 0, points)
+        func = partial(tepui,
+            top=0.3,
+            bottom=0.05,
+            slope=4.0,
+            vertex=1.0,
+            pts=np.array(
+                [[0.25, 0.25],
+                [0.75, 0.75]]
+                )
+        )
+        Z = np.apply_along_axis(func, 0, points)
 
-            fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
-            ax.set_xlim3d(left=0, right=1)
-            ax.set_ylim3d(bottom=0, top=1)
-            ax.set_zlim3d(bottom=0, top=1)
-            ax.plot_surface(X, Y, Z,
-                            vmin=Z.min(),
-                            vmax=Z.max() + 0.1,
-                            rstride=1, cstride=1,
-                            cmap=cm.terrain
-                            )
-            plt.show()
-
+        fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
+        ax.set_xlim3d(left=0, right=1)
+        ax.set_ylim3d(bottom=0, top=1)
+        ax.set_zlim3d(bottom=0, top=1)
+        ax.plot_surface(X, Y, Z,
+                        vmin=Z.min(),
+                        vmax=Z.max() + 0.1,
+                        rstride=1, cstride=1,
+                        cmap=cm.terrain
+                        )
+        plt.show()
     """
     return np.minimum(
         top,
         np.maximum(bottom, vertex - slope * np.min(np.linalg.norm(pts - pt, axis=1))),
     )
+
+
+def surface_perp_to(pt, vect: np.ndarray, val_at_0: float):
+    """
+    Return value of function : (x,y) -> z whichs graph is a surface
+    perpendicular to argument vect = (a, b, c) and passing thorough the point (0,0, val_at_0).
+    Argument vect cannot have c = 0
+    Plot function:
+        from functools import partial
+        import numpy as np
+        import matplotlib.pyplot as plt
+        from matplotlib import cm
+        from SquareDivision.src.distributions import surface_perp_to
+
+        x = np.arange(0, 1, 0.01)
+        y = np.arange(0, 1, 0.01)
+
+        X, Y = np.meshgrid(x, y)
+        points = np.array([X,Y])
+
+        func = partial(surface_perp_to,
+            vect = np.array([-1, -1, 3]),
+            val_at_0 = 0.2
+        )
+        Z = np.apply_along_axis(func, 0, points)
+
+        fig, ax =  plt.subplots(subplot_kw={"projection": "3d"})
+        ax.set_xlim3d(left=0, right=1)
+        ax.set_ylim3d(bottom=0, top=1)
+        ax.set_zlim3d(bottom=0, top=1)
+        ax.plot_surface(X, Y, Z,
+                        vmin=Z.min(),
+                        vmax=Z.max() + 0.1,
+                        rstride=1, cstride=1,
+                        cmap=cm.terrain
+                        )
+        plt.show()
+    """
+    return -vect[:2].dot(pt) / vect[2] + val_at_0

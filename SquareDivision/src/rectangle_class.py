@@ -47,16 +47,19 @@ class Rectangulation:
         num,
         widths_strategy: SizeStrategy,
         heights_strategy: SizeStrategy,
+        **kwargs
     ):
         """Default path of creating rectangles at uniformly drawn centers"""
         self.uniform_centers(num)
         self.sample_widths(
             widths_strategy,
             centers=self.centers,
+            **kwargs
         )
         self.sample_heights(
             heights_strategy,
             centers=self.centers,
+            **kwargs
         )
         self.rectangles_sample = np.c_[self.centers, self.widths, self.heights]
 
@@ -89,12 +92,8 @@ class Rectangulation:
 
     def graph_processing(self, rectangles=None):
         rectangles = self.clinched_rectangles if rectangles is None else rectangles
-        self.east_neighbours = contact_graph_incidence_matrix(rectangles, "r").astype(
-            int
-        )
-        self.north_neighbours = contact_graph_incidence_matrix(rectangles, "u").astype(
-            int
-        )
+        self.east_neighbours = contact_graph_incidence_matrix(rectangles, "r")
+        self.north_neighbours = contact_graph_incidence_matrix(rectangles, "u")
         self.east_graph = nx.from_numpy_array(self.east_neighbours)
         self.north_graph = nx.from_numpy_array(self.north_neighbours)
         self.holes = find_holes(self.east_neighbours, self.north_neighbours)
@@ -123,7 +122,7 @@ class Rectangulation:
         )
         self.closed = self.sol.reshape(-1, 4)
 
-    def report(self, tol=0.03, digits=3):
+    def report(self,tol=0.03, digits=3, limit_list=-1):
         """Report rectangles relative ratio change between clinched_rectangles and closed"""
 
         def relative_change(before: np.ndarray, after: np.ndarray):
@@ -144,10 +143,12 @@ class Rectangulation:
         rel_diff_ord = relative_diff[order]
         touched_beyoned_tolerance = np.where(rel_diff_ord > tol)[0]
         if len(touched_beyoned_tolerance) > 0:
-            for no in touched_beyoned_tolerance:
+            for i, no in enumerate(touched_beyoned_tolerance):
                 print(
                     f"rectangle no.{order[no]:>3} relatively changed by {rel_diff_ord[no]:>{digits+3}.{digits}f} "
                 )
+                if i == limit_list-1:
+                    return
         else:
             print(f"All rectangles within tolerace")
 

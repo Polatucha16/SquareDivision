@@ -19,20 +19,16 @@ def ax_settings(ax: Axes):
 def struc_arr(arr : np.ndarray, 
               dtype = 
                [('x', float), 
-                ('y',float), 
+                ('y', float), 
                 ('width', float), 
                 ('height', float)]
 ):  
-    """ help in clear rectangles drawing """
+    """ column naming scheme """
     values = list(map(tuple, arr[:,:4]))
     return np.array(values, dtype=dtype)
 
-def draw_rectangles(ax:Axes, arr: np.ndarray, marked:int=False , stop:int=False):
-    stop = -1 if stop is False else stop
-    marked = -1 if marked is False else marked
+def draw_rectangles(ax:Axes, arr: np.ndarray, marked:int=-1 , stop:int=-1):
     ax = ax_settings(ax)
-
-    
     data = struc_arr(arr)
     for i, arg in enumerate(data):
         rect = Rectangle(xy=(arg['x'], arg['y']), 

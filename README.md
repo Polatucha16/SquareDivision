@@ -33,10 +33,12 @@ rects.report(tol=0.0005, digits=4, limit_list=20)
 rects.draw(disjoint=True, inflated=True, inflated_nums=True, closed=True, closed_nums=False)
 ```
 Then the output should be:\
+```
 rectangle no. 23 relatively changed by  0.0014
 rectangle no. 12 relatively changed by  0.0011 
 rectangle no.  0 relatively changed by  0.0007 
 rectangle no. 17 relatively changed by  0.0006 
 rectangle no.  6 relatively changed by  0.0006 
-rectangle no.  2 relatively changed by  0.0005 
+rectangle no.  2 relatively changed by  0.0005
+```
 <img src="SquareDivision\output_after_codebox.png" alt="example"/>

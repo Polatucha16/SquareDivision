@@ -48,6 +48,7 @@ rectangle no.  6 relatively changed by  0.0006
 rectangle no.  2 relatively changed by  0.0005
 ```
 <img src="SquareDivision\output_after_codebox.png" alt="example"/>
+
 This time the distribution of width and height is uniform between linear functions.
 Example of one of those function we have below:
 ```python

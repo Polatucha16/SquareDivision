@@ -26,9 +26,10 @@ class CentersStrategy(ABC):
 
 
 # FIX: this is pointless XD, change this to appling a mapping to set of points
-# maybe not since 
+# maybe not since
 class RngDistribution(CentersStrategy):
-    """Returns rng.distribution(**kwargs)
+    """
+    Returns rng.distribution(**kwargs)
     Example:
         from SquareDivision.src.rectangle_class import Rectangulation
         from SquareDivision.src.distributions import RngDistribution
@@ -71,7 +72,8 @@ class SizeStrategy(ABC):
 
 
 class FromFunction(SizeStrategy):
-    """At the point (x,y), draw from dirac delta distribution
+    """
+    At the point (x,y), draw from dirac delta distribution
     supported in the point func((x,y))"""
 
     def __init__(self, func: Callable):
@@ -84,13 +86,14 @@ class FromFunction(SizeStrategy):
 
 
 class BetweenFunctions(SizeStrategy):
-    """At the point (x,y), draw from uniform distribution supported
+    """
+    At the point (x,y), draw from uniform distribution supported
     between func_0((x,y)) and func_1((x,y))."""
 
-    def __init__(self, func_0: Callable, func_1: Callable, rng:Generator):
+    def __init__(self, func_0: Callable, func_1: Callable, rng: Generator):
         self.func_0 = func_0
         self.func_1 = func_1
-        self.rng:Generator = rng
+        self.rng: Generator = rng
 
     def generate(self, centers: np.ndarray, **kwargs):
         pts_0 = np.apply_along_axis(self.func_0, 1, centers)
@@ -103,6 +106,7 @@ class BetweenFunctions(SizeStrategy):
 class SizeFixed(SizeStrategy):
     def generate(self, widths_or_heights: np.ndarray):
         return widths_or_heights
+
 
 def tepui(
     pt,

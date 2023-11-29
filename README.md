@@ -2,7 +2,8 @@
 
 3 stages of family of rectangles:\
 <img src="README_pictures\output_example.png" alt="example"/>
-Widths and heights of initial rectangles were set by values of the following function:
+
+Widths and heights of initial rectangles in **Rectangles sample** were set by values of the following function:
 ```python
 from SquareDivision.src.distributions import tepui
 from SquareDivision.draw.draw import draw_func
@@ -11,7 +12,21 @@ draw_func(tepui, func_kwargs = tepui_kwargs )
 ```
 <img src="README_pictures\tepui_distribution.png" alt="tepui_distribution"/>
 
-# How to use:
+# How to use and what is going on:
+The idea is to define distributions for: centers, widths, and heights of rectangles.\
+The centers are drawn from uniform distribution on `[0,1)^2`.
+1. The strategy `BetweenFunctions` does the following:\
+for the point `(x, y)` evaluate `func_0(x,y)`, `func_1(x,y)` and draw a number `w` from the uniform distribution:
+`U(func_0(x,y), func_1(x,y))` say it will be width.\
+Do the similar for height `h` with possibly different functions or different way of sampling,\
+then create a rectangle with center `(x,y)`, width `w` & height `h` and add it to primordial set of rectangles.\
+2. After initial sampling is done `find_disjoint_family()` method pick disjoint family of rectangles.\
+3. For the disjoint family method `clinch()` inflate rectangles so that every single one is touching other rectangles or
+boundary of square `[0,1]^2`.
+4. Finally `close_holes()` decide how and moddify clinched rectangle in such a way to remove holes.
+
+Example in code:
+
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation
@@ -46,7 +61,7 @@ rectangle no.  0 relatively changed by  0.0452
 ```
 <img src="README_pictures\output_after_codebox.png" alt="example"/>
 
-This time the distribution of width and height is uniform between two linear functions.
+This time, the distribution of widths and heights is uniform between two linear functions.
 An example of one of those functions we plot below:
 ```python
 import numpy as np
@@ -63,17 +78,17 @@ After the rectangles are clinched we can produce contact graphs, this is done by
 ```graph_processing()``` method and the results are stored in :\
 ```self.east_neighbours``` and ```self.north_neighbours``` - incidence matrices of from left to right contacts and 
 from bottom to up constacts respectively.\
-```self.east_graph``` and  ```self.north_graph``` - NetworkX graphs build from incidence matrices.\
+```self.east_graph``` and  ```self.north_graph``` - NetworkX graphs build from the above incidence matrices.\
 ```self.holes_idxs``` - list of indecies of rectangles bounding holes. Each element is pair of pairs
 representing [left and right] and [bottom and upper] bound of a hole in clinched rectangles.\
 \
-```draw_contact_graph(i)``` method draw contacts graphs for ```i``` equal to:
+```draw_contact_graph(i)``` method draws contacts graphs. Depending on  ```i``` it draws:\
 0 - disjoint sample;\
 1 - clinched;\
-2 - closed.\
+2 - closed.
 
-Notice the hole [[3,0], [2,1]] in ```self.holes_idxs``` notation, that hole in rectangles is
-represented as hole(chordless cycle) in upper right corner of the graph below.
+Notice in upper right corner of the picture below that the hole ```[[3,0], [2,1]]``` in ```self.holes_idxs``` notation is a hole in clinched rectangles\
+ and it is also a hole (chordless cycle) in the graph constructed from the union of ```self.east_graph``` and  ```self.north_graph```.
 ```python
 rects.draw_contact_graph(1)
 ```

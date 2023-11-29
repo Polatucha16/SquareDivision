@@ -49,8 +49,8 @@ rectangle no.  2 relatively changed by  0.0005
 ```
 <img src="SquareDivision\output_after_codebox.png" alt="example"/>
 
-This time the distribution of width and height is uniform between linear functions.
-Example of one of those function we have below:
+This time the distribution of width and height is uniform between two linear functions.
+An example of one of those functions we plot below:
 ```python
 import numpy as np
 from SquareDivision.src.distributions import surface_perp_to

@@ -2,7 +2,13 @@
 
 3 stages of family of rectangles:\
 <img src="SquareDivision\output_example.png" alt="example"/>
-Widths and heights of initial rectangles were set by values of the following function:\
+Widths and heights of initial rectangles were set by values of the following function:
+```python
+from SquareDivision.src.distributions import tepui
+from SquareDivision.draw.draw import draw_func
+tepui_kwargs = {'bottom': 0.1, 'top': 0.45, 'vertex': 0.6, 'slope': 2}
+draw_func(tepui, func_kwargs = tepui_kwargs )
+```
 <img src="SquareDivision\tepui_distribution.png" alt="tepui_distribution"/>
 
 How to use:

@@ -26,6 +26,7 @@ class CentersStrategy(ABC):
 
 
 # FIX: this is pointless XD, change this to appling a mapping to set of points
+# maybe not since 
 class RngDistribution(CentersStrategy):
     """Returns rng.distribution(**kwargs)
     Example:
@@ -86,7 +87,7 @@ class BetweenFunctions(SizeStrategy):
     """At the point (x,y), draw from uniform distribution supported
     between func_0((x,y)) and func_1((x,y))."""
 
-    def __init__(self, func_0: Callable, func_1: Callable, rng):
+    def __init__(self, func_0: Callable, func_1: Callable, rng:Generator):
         self.func_0 = func_0
         self.func_1 = func_1
         self.rng:Generator = rng

@@ -9,26 +9,34 @@ How to use:
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation
-from SquareDivision.src.distributions import BetweenFunctions
-
-def surface_perp_to(pt, vect: np.ndarray, val_at_0: float):
-    return -vect[:2].dot(pt) / vect[2] + val_at_0
+from SquareDivision.src.distributions import FromFunction, BetweenFunctions, tepui, surface_perp_to
 
 rects = Rectangulation(config={"seed": 123567})
-# define sizes of 
+
+
 width_0 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([0, -1, 5]), val_at_0 = 0.005)
 width_1 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([0, -2, 10]), val_at_0 = 0.01)
+
 height_0 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([-1, 0, 5]), val_at_0 = 0.005)
 height_1 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([-2, 0, 10]), val_at_0 = 0.01)
 
-rects.execute(
-    num=1500, 
+rects.sample_rectangles(
+    num=500, 
     widths_strategy = BetweenFunctions(func_0=width_0, func_1=width_1, rng=rects.rng), 
     heights_strategy= BetweenFunctions(func_0=height_0, func_1=height_1, rng=rects.rng), 
 )
-rects.prepare_closing()
+rects.find_disjoint_family()
+rects.clinch()
 rects.close_holes()
+
+rects.report(tol=0.0005, digits=4, limit_list=20)
 rects.draw(disjoint=True, inflated=True, inflated_nums=True, closed=True, closed_nums=False)
 ```
-then the output should be:\
+Then the output should be:\
+rectangle no. 23 relatively changed by  0.0014
+rectangle no. 12 relatively changed by  0.0011 
+rectangle no.  0 relatively changed by  0.0007 
+rectangle no. 17 relatively changed by  0.0006 
+rectangle no.  6 relatively changed by  0.0006 
+rectangle no.  2 relatively changed by  0.0005 
 <img src="SquareDivision\output_after_codebox.png" alt="example"/>

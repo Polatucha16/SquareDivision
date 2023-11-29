@@ -100,13 +100,28 @@ class Rectangulation:
         self.possible_holes_idxs = holes_idxs(rectangles, self.holes)
         self.holes_idxs = check_holes(rectangles, self.possible_holes_idxs)
 
-    def execute(self, num, **kwargs):
-        self.sample_rectangles(num, **kwargs)
-        self.find_disjoint_family()
+    # def execute(self, num, **kwargs):
+    #     self.sample_rectangles(num, **kwargs)
+    #     self.find_disjoint_family()
+    #     self.inflate()
+    #     self.graph_processing()
+
+    def clinch(self):
         self.inflate()
         self.graph_processing()
 
-    def prepare_closing(self, keep_feasible=True):
+    # def close_strategy(self, keep_feasible=True):
+    #     self.x0 = self.clinched_rectangles.flatten()
+    #     self.constraint: LinearConstraint = linear_constraint(
+    #         self.clinched_rectangles,
+    #         self.east_neighbours,
+    #         self.north_neighbours,
+    #         self.holes_idxs,
+    #         keep_feasible=keep_feasible,
+    #     )
+
+    def close_holes(self, keep_feasible=True):
+        # here it is projection onto rectangulations 
         self.x0 = self.clinched_rectangles.flatten()
         self.constraint: LinearConstraint = linear_constraint(
             self.clinched_rectangles,
@@ -115,8 +130,6 @@ class Rectangulation:
             self.holes_idxs,
             keep_feasible=keep_feasible,
         )
-
-    def close_holes(self):
         self.sol = orth_proj_onto_affine_L(
             self.x0, self.constraint.A, self.constraint.lb
         )

@@ -9,7 +9,7 @@ How to use:
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation
-from SquareDivision.src.distributions import FromFunction, BetweenFunctions, tepui, surface_perp_to
+from SquareDivision.src.distributions import BetweenFunctions, surface_perp_to
 
 rects = Rectangulation(config={"seed": 123567})
 
@@ -32,7 +32,7 @@ rects.close_holes()
 rects.report(tol=0.0005, digits=4, limit_list=20)
 rects.draw(disjoint=True, inflated=True, inflated_nums=True, closed=True, closed_nums=False)
 ```
-Then the output should be:\
+Then the output should be:
 ```
 rectangle no. 23 relatively changed by  0.0014
 rectangle no. 12 relatively changed by  0.0011 

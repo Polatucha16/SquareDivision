@@ -15,11 +15,11 @@ draw_func(tepui, func_kwargs = tepui_kwargs )
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation
-from SquareDivision.src.distributions import BetweenFunctions, surface_perp_to
+from SquareDivision.src.distributions import FromFunction, BetweenFunctions, tepui, surface_perp_to
 
 rects = Rectangulation(config={"seed": 123567})
 
-
+# Define boundaries of width & height distributions here:
 width_0 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([0, -1, 5]), val_at_0 = 0.005)
 width_1 = lambda mid_pt: surface_perp_to(mid_pt, vect = np.array([0, -2, 10]), val_at_0 = 0.01)
 
@@ -35,17 +35,14 @@ rects.find_disjoint_family()
 rects.clinch()
 rects.close_holes()
 
-rects.report(tol=0.0005, digits=4, limit_list=20)
+rects.report(tol=0.01, digits=4, limit_list=3)
 rects.draw(disjoint=True, inflated=True, inflated_nums=True, closed=True, closed_nums=False)
 ```
 Then the output should be:
 ```
-rectangle no. 23 relatively changed by  0.0014
-rectangle no. 12 relatively changed by  0.0011 
-rectangle no.  0 relatively changed by  0.0007 
-rectangle no. 17 relatively changed by  0.0006 
-rectangle no.  6 relatively changed by  0.0006 
-rectangle no.  2 relatively changed by  0.0005
+rectangle no. 23 relatively changed by  0.0627 
+rectangle no. 12 relatively changed by  0.0560 
+rectangle no.  0 relatively changed by  0.0452 
 ```
 <img src="README_pictures\output_after_codebox.png" alt="example"/>
 

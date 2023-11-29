@@ -66,8 +66,8 @@ After the rectangles are clinched we can produce contact graphs, this is done by
 ```graph_processing()``` method and the results are stored in :\
 ```self.east_neighbours``` and ```self.north_neighbours``` - incidence matrices of from left to right contacts and 
 from bottom to up constacts respectively.\
-```self.east_graph``` and  ```self.north_graph``` - XNetwork graphs objects build from incidence matrices.\
-```self.holes_idxs``` - the list of rectangle indecies bounding holes. Each element is pair of pairs
+```self.east_graph``` and  ```self.north_graph``` - NetworkX graphs build from incidence matrices.\
+```self.holes_idxs``` - list of indecies of rectangles bounding holes. Each element is pair of pairs
 representing [left and right] and [bottom and upper] bound of a hole in clinched rectangles.\
 \
 ```draw_contact_graph(i)``` method draw contacts graphs for ```i``` equal to:

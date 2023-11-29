@@ -20,7 +20,7 @@ for the point `(x, y)` evaluate `func_0(x,y)`, `func_1(x,y)` and draw a number `
 `U(func_0(x,y), func_1(x,y))` say it will be width.\
 Do the similar for height `h` with possibly different functions or different way of sampling,\
 then create a rectangle with center `(x,y)`, width `w` & height `h` and add it to primordial set of rectangles.
-2. After initial sampling is done, method `find_disjoint_family()` picks disjoint family of rectangles.
+2. After initial sampling is done, method `find_disjoint_family()` picks disjoint family of rectangles from the primordial set created in the point 1.
 3. For the disjoint family, method `clinch()` inflates rectangles so that every single one is touching other rectangles or
 boundary of the square `[0,1]^2`.
 4. Finally `close_holes()` decide how and moddify clinched rectangles in such a way to remove holes.

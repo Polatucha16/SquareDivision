@@ -11,7 +11,7 @@ draw_func(tepui, func_kwargs = tepui_kwargs )
 ```
 <img src="SquareDivision\tepui_distribution.png" alt="tepui_distribution"/>
 
-How to use:
+# How to use:
 ```python
 import numpy as np
 from SquareDivision.src.rectangle_class import Rectangulation
@@ -48,8 +48,8 @@ rectangle no.  6 relatively changed by  0.0006
 rectangle no.  2 relatively changed by  0.0005
 ```
 <img src="SquareDivision\output_after_codebox.png" alt="example"/>
-This time the distribution of width and height is uniform between linear functions.\
-Example of such one of those function we have below:
+This time the distribution of width and height is uniform between linear functions.
+Example of one of those function we have below:
 ```python
 import numpy as np
 from SquareDivision.src.distributions import surface_perp_to
@@ -57,5 +57,5 @@ from SquareDivision.draw.draw import draw_func
 surface_perp_to_kwargs = {'vect' : np.array([0, -1, 5]), 'val_at_0' : 0.005}
 draw_func(surface_perp_to, func_kwargs = surface_perp_to_kwargs)
 ```
-<img src="SquareDivision\surface_perp_to_boundary.png" alt="example"/>
+<img src="SquareDivision\surface_perp_to_boundary.png" alt="example perp"/>
 

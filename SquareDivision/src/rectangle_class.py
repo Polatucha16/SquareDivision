@@ -100,25 +100,9 @@ class Rectangulation:
         self.possible_holes_idxs = holes_idxs(rectangles, self.holes)
         self.holes_idxs = check_holes(rectangles, self.possible_holes_idxs)
 
-    # def execute(self, num, **kwargs):
-    #     self.sample_rectangles(num, **kwargs)
-    #     self.find_disjoint_family()
-    #     self.inflate()
-    #     self.graph_processing()
-
     def clinch(self):
         self.inflate()
         self.graph_processing()
-
-    # def close_strategy(self, keep_feasible=True):
-    #     self.x0 = self.clinched_rectangles.flatten()
-    #     self.constraint: LinearConstraint = linear_constraint(
-    #         self.clinched_rectangles,
-    #         self.east_neighbours,
-    #         self.north_neighbours,
-    #         self.holes_idxs,
-    #         keep_feasible=keep_feasible,
-    #     )
 
     def close_holes(self, keep_feasible=True):
         # here it is projection onto rectangulations 
@@ -146,7 +130,7 @@ class Rectangulation:
             shape = before.shape
             x_ratios, y_ratios = before[:, 0] / after[:, 0], before[:, 1] / after[:, 1]
             ones = np.ones(shape=shape[0])
-            coef = np.linalg.norm(before - after, axis=1) ** 2
+            coef = np.linalg.norm(before - after, axis=1) #** 2
             return (ones + x_ratios + y_ratios) * coef
 
         relative_diff = relative_change(

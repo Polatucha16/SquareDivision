@@ -1,7 +1,7 @@
 # Retrangulation from random family of rectangles
 
 3 stages of family of rectangles:\
-<img src="SquareDivision\output_example.png" alt="example"/>
+<img src="README_pictures\output_example.png" alt="example"/>
 Widths and heights of initial rectangles were set by values of the following function:
 ```python
 from SquareDivision.src.distributions import tepui
@@ -9,7 +9,7 @@ from SquareDivision.draw.draw import draw_func
 tepui_kwargs = {'bottom': 0.1, 'top': 0.45, 'vertex': 0.6, 'slope': 2}
 draw_func(tepui, func_kwargs = tepui_kwargs )
 ```
-<img src="SquareDivision\tepui_distribution.png" alt="tepui_distribution"/>
+<img src="README_pictures\tepui_distribution.png" alt="tepui_distribution"/>
 
 # How to use:
 ```python
@@ -47,7 +47,7 @@ rectangle no. 17 relatively changed by  0.0006
 rectangle no.  6 relatively changed by  0.0006 
 rectangle no.  2 relatively changed by  0.0005
 ```
-<img src="SquareDivision\output_after_codebox.png" alt="example"/>
+<img src="README_pictures\output_after_codebox.png" alt="example"/>
 
 This time the distribution of width and height is uniform between two linear functions.
 An example of one of those functions we plot below:
@@ -58,5 +58,23 @@ from SquareDivision.draw.draw import draw_func
 surface_perp_to_kwargs = {'vect' : np.array([0, -1, 5]), 'val_at_0' : 0.005}
 draw_func(surface_perp_to, func_kwargs = surface_perp_to_kwargs)
 ```
-<img src="SquareDivision\surface_perp_to_boundary.png" alt="example perp"/>
+<img src="README_pictures\surface_perp_to_boundary.png" alt="example perp"/>
+
+## Contact graph
+
+After the rectangles are clinched we can produce contact graphs, this is done by\
+```python graph_processing()``` method and the results are stored in :\
+self.east_neighbours and self.north_neighbours - incidence matrices of from left to right contacts and 
+from bottom to up constacts respectively.\
+self.east_graph and  self.north_graph - XNetwork graphs objects build from incidence matrices.\
+self.holes_idxs - the list of rectangle indecies bounding holes. Each element is pair of pairs
+representing [left and right] and [bottom and upper] bound of a hole in clinched rectangles.
+```python draw_contact_graph(i)``` method draw contacts graphs for ```python i``` equal to
+0 - disjoint sample,
+1 - clinched
+2 - closed 
+```python
+rects.draw_contact_graph(1)
+```
+<img src="README_pictures\contact_graph_linear_distribution.png" alt="example contact graph"/>
 

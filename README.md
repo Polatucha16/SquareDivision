@@ -63,19 +63,19 @@ draw_func(surface_perp_to, func_kwargs = surface_perp_to_kwargs)
 ## Contact graph
 
 After the rectangles are clinched we can produce contact graphs, this is done by\
-```python graph_processing()``` method and the results are stored in :\
-```python self.east_neighbours``` and ```python self.north_neighbours``` - incidence matrices of from left to right contacts and 
+```graph_processing()``` method and the results are stored in :\
+```self.east_neighbours``` and ```self.north_neighbours``` - incidence matrices of from left to right contacts and 
 from bottom to up constacts respectively.\
-```python self.east_graph``` and  ```python self.north_graph``` - XNetwork graphs objects build from incidence matrices.\
-```python self.holes_idxs``` - the list of rectangle indecies bounding holes. Each element is pair of pairs
+```self.east_graph``` and  ```self.north_graph``` - XNetwork graphs objects build from incidence matrices.\
+```self.holes_idxs``` - the list of rectangle indecies bounding holes. Each element is pair of pairs
 representing [left and right] and [bottom and upper] bound of a hole in clinched rectangles.\
 \
-```python draw_contact_graph(i)``` method draw contacts graphs for ```python i``` equal to:
+```draw_contact_graph(i)``` method draw contacts graphs for ```i``` equal to:
 0 - disjoint sample;\
 1 - clinched;\
 2 - closed.\
 
-Notice the hole [[3,0], [2,1]] in ```python self.holes_idxs``` notation, that hole in rectangles is
+Notice the hole [[3,0], [2,1]] in ```self.holes_idxs``` notation, that hole in rectangles is
 represented as hole(chordless cycle) in upper right corner of the graph below.
 ```python
 rects.draw_contact_graph(1)

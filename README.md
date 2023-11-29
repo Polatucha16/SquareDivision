@@ -69,14 +69,16 @@ from bottom to up constacts respectively.\
 ```python self.east_graph``` and  ```python self.north_graph``` - XNetwork graphs objects build from incidence matrices.\
 ```python self.holes_idxs``` - the list of rectangle indecies bounding holes. Each element is pair of pairs
 representing [left and right] and [bottom and upper] bound of a hole in clinched rectangles.\
-```python draw_contact_graph(i)``` method draw contacts graphs for ```python i``` equal to
-0 - disjoint sample,
-1 - clinched
-2 - closed 
+\\
+```python draw_contact_graph(i)``` method draw contacts graphs for ```python i``` equal to:
+0 - disjoint sample;\
+1 - clinched;\
+2 - closed.\
+
+Notice the hole [[3,0], [2,1]] in ```python self.holes_idxs``` notation, that hole in rectangles is
+represented as hole(chordless cycle) in upper right corner of the graph below.
 ```python
 rects.draw_contact_graph(1)
 ```
-Notice the hole [[3,0], [2,1]] in ```python self.holes_idxs``` notation, that hole in rectangles is
-represented as hole(chordless cycle) in upper right corner of the graph below.
 <img src="README_pictures\contact_graph_linear_distribution.png" alt="example contact graph"/>
 

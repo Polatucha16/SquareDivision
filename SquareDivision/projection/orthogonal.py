@@ -1,7 +1,7 @@
 import numpy as np
 
 def orth_proj_onto_affine_L(x:np.ndarray , A:np.ndarray, b:np.ndarray ):
-    """ Return a projection of x onto affine subspace L,
+    """ Return the orthogonal projection of x onto affine subspace L,
             L = {z : A.z == b}.
         Arguments:
             x : (n,)
@@ -21,3 +21,4 @@ def orth_proj_onto_affine_L(x:np.ndarray , A:np.ndarray, b:np.ndarray ):
     inv_A_AT = np.linalg.inv(np.matmul(A, A.T))
     lambdas = np.matmul(inv_A_AT, -A.dot(x)+b)
     return x + A.T.dot(lambdas)
+# maybe use QR decomposition or least squares ?

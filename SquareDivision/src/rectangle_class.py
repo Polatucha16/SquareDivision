@@ -6,7 +6,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 from SquareDivision.src.distributions import SizeStrategy
-from SquareDivision.src.dataflow import (
+from SquareDivision.src.process import (
     find_anchors_and_crop,
     sort_by_area,
     remove_smaller,
@@ -15,8 +15,8 @@ from SquareDivision.src.dataflow import (
 from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
 from SquareDivision.projection.orthogonal import orth_proj_onto_affine_L
-from SquareDivision.optimization.constraints import linear_constraint
-from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers
+from SquareDivision.eq_system.constraints import linear_constraint
+from SquareDivision.draw.draw import draw_rectangles, rectangle_numbers, draw_union_of_graphs
 from SquareDivision.config import config
 
 
@@ -190,15 +190,8 @@ class Rectangulation:
         0 - rectangle sample
         1 - clinched
         2 - closed """
-
         arr = {0:self.arr, 1:self.clinched_rectangles, 2:self.closed}[i]
         self.graph_processing(arr)
         H = nx.from_numpy_array(self.east_neighbours, create_using=nx.DiGraph)
         V = nx.from_numpy_array(self.north_neighbours, create_using=nx.DiGraph)
-        attrs = { i : {'pos': tuple(row[:2] + 0.5 * row[2:4])} for i, row in enumerate(arr)}
-        nx.set_node_attributes(H, attrs)
-        pos = nx.get_node_attributes(H,'pos')
-        fig, ax = plt.subplots(figsize=(9, 9))
-        nx.draw_networkx(H, pos=pos, ax=ax,  edge_color='tab:blue' )
-        nx.draw_networkx_edges(V, pos=pos, ax=ax, edge_color='tab:red')
-        plt.show()
+        draw_union_of_graphs(arr, H, V)

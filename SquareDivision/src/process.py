@@ -3,66 +3,67 @@ from typing import Callable
 
 from SquareDivision.src.morph import homogeneus_push_all, wall_push
 from SquareDivision.src.regions import homogeneous_scale_in_dir_search
-from SquareDivision.contact_graph.incidence_matrix import (
-    contact_graph_incidence_matrix
-)
-from SquareDivision.holes.detect import find_holes
+# from SquareDivision.contact_graph.incidence_matrix import (
+#     contact_graph_incidence_matrix
+# )
+# from SquareDivision.holes.detect import find_holes
 
-def arg_rect_list(n, pts_func, sizes_func, rng):
-    """ Return an np.ndarray (n,4) with rows of the form:
-        (x, y, width, height)
-        representing:
-            x, y - center of a rectangle
-            width, height - parameters for matplotlib.patches.Rectangle
-        Arguments
-            pts_func : function that generates points
-                Returns  
-                    np.ndarray of shape (*, 2)
-                Arguments
-                    n   - int parameter controling number of points to generate
-                    rng - numpy.random._generator.Generator
-            sizes_func : function that control size of rectangle at (x, y)
-                Returns 
-                    (width, height) : float or array
-                Arguments
-                    (x, y) : float or array
 
-        Example:
-            import numpy as np
-            from numpy.random._generator import Generator
-            import functools
-            from SquareDivision.src.generators import uniform_pts
-            from SquareDivision.src.distributions import x_plus_y_func
-            from SquareDivision.src.dataflow import arg_rect_list
-            from SquareDivision.config import config
+# def arg_rect_list(n, pts_func, sizes_func, rng):
+#     """ Return an np.ndarray (n,4) with rows of the form:
+#         (x, y, width, height)
+#         representing:
+#             x, y - center of a rectangle
+#             width, height - parameters for matplotlib.patches.Rectangle
+#         Arguments
+#             pts_func : function that generates points
+#                 Returns  
+#                     np.ndarray of shape (*, 2)
+#                 Arguments
+#                     n   - int parameter controling number of points to generate
+#                     rng - numpy.random._generator.Generator
+#             sizes_func : function that control size of rectangle at (x, y)
+#                 Returns 
+#                     (width, height) : float or array
+#                 Arguments
+#                     (x, y) : float or array
 
-            rng:Generator = np.random.default_rng(config['seed'])
-            func = functools.partial(x_plus_y_func, 
-                                    min_00=0.01, max_00=0.01,
-                                    min_11=0.2, max_11=0.3,
-                                    rng=rng)
-            arr = arg_rect_list(2, uniform_pts, func, rng=rng)
-        """
+#         Example:
+#             import numpy as np
+#             from numpy.random._generator import Generator
+#             import functools
+#             from SquareDivision.src.generators import uniform_pts
+#             from SquareDivision.src.distributions import x_plus_y_func
+#             from SquareDivision.src.dataflow import arg_rect_list
+#             from SquareDivision.config import config
 
-    pts:np.ndarray = pts_func(n, rng=rng)
-    x, y = pts[:, 0], pts[:, 1]
-    width, height = np.array(sizes_func(x=x, y=y))
-    return np.c_[x, y, width, height]
+#             rng:Generator = np.random.default_rng(config['seed'])
+#             func = functools.partial(x_plus_y_func, 
+#                                     min_00=0.01, max_00=0.01,
+#                                     min_11=0.2, max_11=0.3,
+#                                     rng=rng)
+#             arr = arg_rect_list(2, uniform_pts, func, rng=rng)
+#         """
 
-def rects_from_distributions(
-        n, 
-        pts_func,
-        width_distribution,
-        height_distribution,
-        rng):
-     middle_points:np.ndarray = pts_func(n, rng=rng)
-     widths = np.apply_along_axis(width_distribution,  1, middle_points)
-     heights= np.apply_along_axis(height_distribution, 1, middle_points)
-     return np.c_[middle_points[:,0], middle_points[:,1], widths, heights]
+#     pts:np.ndarray = pts_func(n, rng=rng)
+#     x, y = pts[:, 0], pts[:, 1]
+#     width, height = np.array(sizes_func(x=x, y=y))
+#     return np.c_[x, y, width, height]
+
+# def rects_from_distributions(
+#         n, 
+#         pts_func,
+#         width_distribution,
+#         height_distribution,
+#         rng):
+#      middle_points:np.ndarray = pts_func(n, rng=rng)
+#      widths = np.apply_along_axis(width_distribution,  1, middle_points)
+#      heights= np.apply_along_axis(height_distribution, 1, middle_points)
+#      return np.c_[middle_points[:,0], middle_points[:,1], widths, heights]
 
 def find_anchors_and_crop(arr):
     def cut_to_01(a: np.ndarray):
-        """ Return : (x, y, width, height, area) such that
+        """ Return : (x, y, width, height) such that
                 (x, y) is the xy argument for matplotlib.patches.Rectangle
                 width, height are are now cropped thus they do not reach
                     outside (0,1) x (0,1) square

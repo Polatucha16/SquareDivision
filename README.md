@@ -19,8 +19,8 @@ The centers are drawn from uniform distribution on `[0,1)^2`.
 for the point `(x, y)` evaluate `func_0(x,y)`, `func_1(x,y)` and draw a number `w` from the uniform distribution:
 `U(func_0(x,y), func_1(x,y))` say it will be width.\
 Do the similar for height `h` with possibly different functions or different way of sampling,\
-then create a rectangle with center `(x,y)`, width `w` & height `h` and add it to primordial set of rectangles.\
-2. After initial sampling is done `find_disjoint_family()` method pick disjoint family of rectangles.\
+then create a rectangle with center `(x,y)`, width `w` & height `h` and add it to primordial set of rectangles.
+2. After initial sampling is done `find_disjoint_family()` method pick disjoint family of rectangles.
 3. For the disjoint family method `clinch()` inflate rectangles so that every single one is touching other rectangles or
 boundary of square `[0,1]^2`.
 4. Finally `close_holes()` decide how and moddify clinched rectangle in such a way to remove holes.

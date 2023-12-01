@@ -89,6 +89,10 @@ class Rectangulation:
     def inflate(self):
         self.clinched_rectangles = inflate_rectangles(self.arr)
         self.clinched_rectangles = np.maximum(0, self.clinched_rectangles)
+    # # wish
+    # from SquareDivision.morph.inflate import InflateStrategy
+    # def inflate(self, inflate_strategy:InflateStrategy, **kwargs):
+    #     self.clinched_rectangles = inflate_strategy.inflate(self.rectangles_sample, **kwargs)
 
     def graph_processing(self, rectangles=None):
         rectangles = self.clinched_rectangles if rectangles is None else rectangles

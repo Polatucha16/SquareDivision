@@ -146,8 +146,8 @@ def region_condition(x, y, w, h, dir: direction):
 
     def regionQ(u: np.ndarray, v: np.ndarray):
         """How to call:
-        rect = (x,y, width, height) #the rectangle from which we construct regions
-        dir = 'l' #the direction from 'l', 'r', 'u', 'd'
+        rect = (x,y, width, height) # the rectangle from which we construct regions
+        dir = 'l' #the direction in {'l', 'r', 'u', 'd'}
         # arr of shape (*,2+) such that first two columns are:
         #   X, Y coordinates we want to test
         pts = arr[:,:2].T
@@ -188,7 +188,7 @@ def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: direction):
             :  |  /  / (xy) = +---- width ----+
             :--+ /  /  /  /  /|
             :/  /  /  /  /  / |
-            Return array of rows: (anchor,start,stop) where rows represent:
+            Return array of rows: (anchor, start, stop) where rows represent:
                 In case dir is 'l' or 'r'
             :          ^
             :          |
@@ -201,7 +201,6 @@ def opposing_walls_in_half_plane_in_dir(rect_num, rect_arr, dir: direction):
             :  anchor  |
 
                 In case dir is 'u' or 'd'
-                        :          ^
             :               ^
             :               |
             :               |

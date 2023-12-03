@@ -67,8 +67,12 @@ def from_rectangles_family(a, dir:Literal['l','r','d','u']):
     data = np.c_[anchors,wall_0, wall_1]
     return SuspendedWalls(data, direction)
 
+
+
 class SuspendedWalls:
-    """ Store and query families of axial supsended walls in [0,1]^2 """
+    """ 
+    Store and query families of axial supsended walls in [0,1]^2 
+    suspended wall in this class np.ndarray : [anchor, start, stop]"""
     _anchor_axis_dir = {'horizontal' : 1, 'vertical' : 0}
     _wall___axis_dir = {'horizontal' : 0, 'vertical' : 1}
 
@@ -119,7 +123,8 @@ class SuspendedWalls:
 
     def first_barrier_in_wall_push(self, suspended_wall, leq_or_geq) -> np.ndarray:
         """
-        Return suspended wall that is the closest from suspended_wall in the direction leq_or_geq
+        Return suspended wall that is the intersection of prallel projection of suspended_wall in the direction leq_or_geq
+        onto first suspended wall from the family self.data
         """
         rectangle_wall = suspended_wall[1:]
         anchors_order = self.potential_bariers(suspended_wall, leq_or_geq)
@@ -142,8 +147,11 @@ class SuspendedWalls:
         self, suspended_wall, leq_or_geq, focal_length
     ) -> np.ndarray:
         """
-        Return suspended wall that is on the way of homogeneous scailing
-        of suspended_wall in direction leq_or_geq with focal_length"""
+        Return suspended wall that is intersection of 
+        1. projection of suspended_wall in direction leq_or_geq from the point focal_length away of suspended_wall
+        and 
+        2. first (in direction leq_or_geq) suspended wall from family self.data
+        """
         rectangle_wall = suspended_wall[1:]
         anchors_order = self.potential_bariers(suspended_wall, leq_or_geq)
         for i, wall_number in enumerate(anchors_order):

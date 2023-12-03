@@ -64,7 +64,7 @@ def from_rectangles_family(a, dir:Literal['l','r','d','u']):
         wall_0, wall_1 = a[:, 0], a[:, 0] + a[:, 2]
     else:
         raise Exception(f'dir = {dir} is not one of ["l", "r", d", "u"]')
-    data = np.c_[anchors,wall_0, wall_1]
+    data = np.c_[anchors, wall_0, wall_1]
     return SuspendedWalls(data, direction)
 
 
@@ -97,8 +97,8 @@ class SuspendedWalls:
         self, suspended_wall: np.ndarray, leq_or_geq: Literal["leq", "geq"]
     ) -> np.ndarray:
         """
-        For a triple (anchor*, start, stop) in suspended_wall argument,
-        Return SuspendedWalls data parameter of those walls  that have anchors
+        For a triple [anchor*, start, stop] in suspended_wall argument,
+        Return suspended walls that have anchors
         'less or equal than' or 'greater or equal than' (depending on leq_or_geq)
         anchor*."""
 

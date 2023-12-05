@@ -1,14 +1,6 @@
 import numpy as np
 from typing import Literal
 
-# why not KDTree : rectangles are defined by corners not by points on the wall
-# if we would change rectangle family to sets of points on every side we still
-# would need to take care of density of those points and since there is no arbitrary
-# bound on the relative size sifference between rectangles we would need to ajust it to the smallest one which would
-# potentially explode in size of data in brutal approach of covering all sides of all rectangles of equally
-# spaced points. Therefore barier search is done in a loop to find first barier.
-
-
 def intersect(a: np.ndarray, b: np.ndarray) -> tuple:
     """
     Intersect open intervals a, b. Ignoring order of points in a and b.
@@ -86,6 +78,12 @@ class SuspendedWalls:
 
     def __len__(self) -> int:
         return len(self.data)
+    
+    def __getitem__(self, key):
+        return self.data[key]
+    
+    def __setitem__(self, key, newvalue):
+        self.data[key] = newvalue
 
     def anchors(self) -> np.ndarray:
         return self.data[:, 0]

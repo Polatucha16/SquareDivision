@@ -134,7 +134,7 @@ class SuspendedWalls:
                 return data
             else:
                 continue
-        # HERE no intersection wos found -> Go to 0 or 1 depending on leq_or_geq
+        # HERE no intersection was found -> Go to 0 or 1 depending on leq_or_geq
         if leq_or_geq == "leq":
             data = np.r_[0, rectangle_wall]
         else:
@@ -163,7 +163,7 @@ class SuspendedWalls:
                 return data
             else:
                 continue
-        # HERE no intersection wos found -> Go to 0 or 1 depending on leq_or_geq
+        # HERE no intersection was found -> Go to 0 or 1 depending on leq_or_geq
         if leq_or_geq == "leq":
             dist = abs(suspended_wall[0] - 0)
             scaled_start_stop = interval_scaling(dist, rectangle_wall, focal_length)

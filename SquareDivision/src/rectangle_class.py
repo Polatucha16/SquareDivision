@@ -12,6 +12,7 @@ from SquareDivision.src.process import (
     remove_smaller,
     inflate_rectangles,
 )
+from SquareDivision.morph.inflate_strategy import InflateStrategy, MaxHomThenMaxPushFromOrder
 from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix
 from SquareDivision.holes.detect import find_holes, holes_idxs, check_holes
 from SquareDivision.projection.orthogonal import orth_proj_onto_affine_L
@@ -82,17 +83,13 @@ class Rectangulation:
 
     # FIX: pass algoritm how to create disjoint rectangles from a rectangles_sample
     def find_disjoint_family(self):
-        self.arr = find_anchors_and_crop(self.rectangles_sample)
-        self.arr = sort_by_area(self.arr)
-        self.arr = remove_smaller(self.arr)
+        self.disjoint = find_anchors_and_crop(self.rectangles_sample)
+        self.disjoint = sort_by_area(self.disjoint)
+        self.disjoint = remove_smaller(self.disjoint)
 
-    def inflate(self):
-        self.clinched_rectangles = inflate_rectangles(self.arr)
-        self.clinched_rectangles = np.maximum(0, self.clinched_rectangles)
-    # # wish
-    # from SquareDivision.morph.inflate import InflateStrategy
-    # def inflate(self, inflate_strategy:InflateStrategy, **kwargs):
-    #     self.clinched_rectangles = inflate_strategy.inflate(self.rectangles_sample, **kwargs)
+    def inflate(self, strategy:InflateStrategy=MaxHomThenMaxPushFromOrder(), **kwargs):
+        self.clinched_rectangles = np.copy(self.disjoint)
+        self.clinched_rectangles = strategy.inflate(self.clinched_rectangles, **kwargs)
 
     def graph_processing(self, rectangles=None):
         rectangles = self.clinched_rectangles if rectangles is None else rectangles
@@ -170,10 +167,10 @@ class Rectangulation:
         axes = [axes] if num_of_axes == 1 else axes
         i = 0
         if disjoint is True:
-            axes[i] = draw_rectangles(axes[i], self.arr)
+            axes[i] = draw_rectangles(axes[i], self.disjoint)
             axes[i].set_xlabel('Rectangles sample')
             if disjoint_nums is True:
-                axes[i] = rectangle_numbers(axes[i], self.arr)
+                axes[i] = rectangle_numbers(axes[i], self.disjoint)
             i += 1
         if inflated is True:
             axes[i] = draw_rectangles(axes[i], self.clinched_rectangles)
@@ -194,7 +191,7 @@ class Rectangulation:
         0 - rectangle sample
         1 - clinched
         2 - closed """
-        arr = {0:self.arr, 1:self.clinched_rectangles, 2:self.closed}[i]
+        arr = {0:self.disjoint, 1:self.clinched_rectangles, 2:self.closed}[i]
         self.graph_processing(arr)
         H = nx.from_numpy_array(self.east_neighbours, create_using=nx.DiGraph)
         V = nx.from_numpy_array(self.north_neighbours, create_using=nx.DiGraph)

@@ -9,8 +9,7 @@ from SquareDivision.src.distributions import SizeStrategy
 from SquareDivision.src.process import (
     find_anchors_and_crop,
     sort_by_area,
-    remove_smaller,
-    inflate_rectangles,
+    remove_smaller
 )
 from SquareDivision.morph.inflate_strategy import InflateStrategy, MaxHomThenMaxPushFromOrder
 from SquareDivision.contact_graph.incidence_matrix import contact_graph_incidence_matrix

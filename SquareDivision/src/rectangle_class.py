@@ -102,10 +102,11 @@ class Rectangulation:
 
     def clinch(self):
         self.inflate()
-        self.graph_processing()
+        # self.graph_processing()
 
     def close_holes(self, keep_feasible=True):
-        # here it is projection onto rectangulations 
+        # here it is projection onto rectangulations
+        self.graph_processing()
         self.x0 = self.clinched_rectangles.flatten()
         self.constraint: LinearConstraint = linear_constraint(
             self.clinched_rectangles,

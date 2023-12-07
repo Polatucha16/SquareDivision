@@ -73,30 +73,3 @@ def remove_smaller(arr:np.ndarray, intersect_Q:Callable=intersect_Q):
     # rows with 0 at the end are to be removed:
     res = res[res[:,-1] > 0]
     return res[:,:-1]
-
-#### 
-# from SquareDivision.src.morph import homogeneus_push_all, wall_push
-# from SquareDivision.src.regions import homogeneous_scale_in_dir_search
-#
-# def inflate_rectangles(arg_arr:np.ndarray):
-#     """ Return array of rectangles after applying the following procedure 
-#         to every rectangle in order they appear in arg_arr:
-#         1) first maximal homogeneous scaling from the midpoint
-#             such that they do not overlap
-#                 another rectangle or outside boundary square;
-#         2) maximally push every wall parallelly again not to
-#             overlap aother rectangle or boundary.
-#         """
-#     arr = np.copy(arg_arr)
-#     for i in range(len(arr)):
-#         hom_scales_in_dirs = []
-#         for dir in ['l', 'r', 'u', 'd']:
-#             scale = homogeneous_scale_in_dir_search(i, arr, dir, 'scale')
-#             hom_scales_in_dirs.append(scale)
-#         hom_scale = min(hom_scales_in_dirs)
-#         arr[i,:4] = np.array(homogeneus_push_all(arr[i,:4], hom_scale))
-
-#         for dir in ['l', 'r', 'u', 'd']:
-#             push_scale = homogeneous_scale_in_dir_search(i, arr, dir, 'push')
-#             arr[i,:4] = np.array(wall_push(arr[i, :4], push_scale, dir))
-#     return arr

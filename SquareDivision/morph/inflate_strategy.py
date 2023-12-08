@@ -72,6 +72,8 @@ class MaxHomThenMaxPushFromOrder(InflateStrategy):
             barriers    : dictionary of bariers {direction : suspended wall}
                             it contain: {'r' : np.array([anchor, start, stop]), ...}
         """
+        if np.isclose(scale, 1.0) is True:
+            return self.rectangles[idx]
         x, y, width, height = self.rectangles[idx]
         center = np.array([x + width / 2, y + height / 2])
         if direction == "r":

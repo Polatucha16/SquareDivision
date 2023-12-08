@@ -101,15 +101,17 @@ class SuspendedWalls:
         anchor*."""
 
         if leq_or_geq == "leq":
-            indices = np.asarray(self.anchors() <= suspended_wall[0]).nonzero()
+            indices = np.logical_or(self.anchors() <= suspended_wall[0], np.isclose(self.anchors(), suspended_wall[0])).nonzero()
+            # indices = np.asarray(self.anchors() <= suspended_wall[0]).nonzero()
         elif leq_or_geq == "geq":
-            indices = np.asarray(self.anchors() >= suspended_wall[0]).nonzero()
+            indices = np.logical_or(self.anchors() >= suspended_wall[0], np.isclose(self.anchors(), suspended_wall[0])).nonzero()
+            # indices = np.asarray(self.anchors() >= suspended_wall[0]).nonzero()
         else:
             raise Exception(f'leq_or_geq = {leq_or_geq} is not one of ["leq", "geq"]')
         data = self.data[indices]
         return data, indices[0]
 
-    def potential_bariers(self, suspended_wall, leq_or_geq) -> np.ndarray:
+    def sort_barriers(self, suspended_wall, leq_or_geq) -> np.ndarray:
         """
         Return the indices of those walls from self.data that can be potential stoping
         places for suspended_wall in direction leq_or_geq
@@ -125,7 +127,7 @@ class SuspendedWalls:
         onto first suspended wall from the family self.data
         """
         rectangle_wall = suspended_wall[1:]
-        anchors_order = self.potential_bariers(suspended_wall, leq_or_geq)
+        anchors_order = self.sort_barriers(suspended_wall, leq_or_geq)
         for i, wall_number in enumerate(anchors_order):
             current_wall = self.walls()[wall_number]
             intersectQ, start_stop = intersect(current_wall, rectangle_wall)
@@ -151,7 +153,7 @@ class SuspendedWalls:
         2. first (in direction leq_or_geq) suspended wall from family self.data
         """
         rectangle_wall = suspended_wall[1:]
-        anchors_order = self.potential_bariers(suspended_wall, leq_or_geq)
+        anchors_order = self.sort_barriers(suspended_wall, leq_or_geq)
         for i, wall_number in enumerate(anchors_order):
             current_wall = self.walls()[wall_number]
             # scaling here

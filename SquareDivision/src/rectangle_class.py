@@ -119,6 +119,13 @@ class Rectangulation:
             self.x0, self.constraint.A, self.constraint.lb
         )
         self.closed = self.sol.reshape(-1, 4)
+    
+    def perform(self):
+        """ kielbasa """
+        self.find_disjoint_family()
+        self.clinch()
+        self.close_holes()
+
 
     def report(self,tol=0.03, digits=3, limit_list=-1):
         """Report rectangles relative ratio change between clinched_rectangles and closed"""

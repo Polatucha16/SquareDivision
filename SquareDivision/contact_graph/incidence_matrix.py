@@ -71,6 +71,10 @@ def idxs_of_touching_rectangles_in_dir(
     """
     Return row (of 0s and 1s) of rectangles contacating rect_num
     in direction dir in clinched_rectangles family
+
+    for rectangle family rects.clinched_rectangles use:
+        from SquareDivision.contact_graph.incidence_matrix import idxs_of_touching_rectangles_in_dir
+        idxs_of_touching_rectangles_in_dir(6, rects.clinched_rectangles, 'd')
     """
     opp_dir = {'r' : 'l', 'u' : 'd', 'l' : 'r','d' : 'u'}
     curr_rect:np.ndarray = clinched_rectangles[rect_num]

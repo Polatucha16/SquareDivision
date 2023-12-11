@@ -59,7 +59,7 @@ height_0 = lambda mid_pt: tepui(mid_pt, **tepui_kwargs_height)
 height_1 = height_0
 
 rngrects = Rectangulation(config={"seed": 12345678})
-kwargs = {'num' : 20,
+kwargs = {'num' : 200,
           'widths_strategy' : BetweenFunctions(func_0=width_0, func_1=width_1, rng=rngrects.rng),
           'heights_strategy': BetweenFunctions(func_0=height_0, func_1=height_1, rng=rngrects.rng)}
 

@@ -142,3 +142,30 @@ def surface_perp_to(pt, vect: np.ndarray, val_at_0: float):
         draw_func(surface_perp_to, func_kwargs = surface_perp_to_kwargs )
     """
     return -vect[:2].dot(pt) / vect[2] + val_at_0
+
+def distToIntervalAB(pt, ax=0, ay=0, bx=1, by=1):
+   # Define the points as numpy arrays
+   p = np.array(pt)
+   a = np.array([ax, ay])
+   b = np.array([bx, by])
+
+   # Calculate the normalized tangent vector
+   d = np.divide(b - a, np.linalg.norm(b - a))
+
+   # Calculate the signed parallel distance components
+   s = np.dot(a - p, d)
+   t = np.dot(p - b, d)
+
+   # Calculate the clamped parallel distance
+   h = np.maximum.reduce([s, t, 0])
+
+   # Calculate the perpendicular distance component
+   c = np.cross(p - a, d)
+
+   # Return the Euclidean distance
+   return np.hypot(h, np.linalg.norm(c))
+
+def cross_ABCD(pt, bottom=0, slope=1, ax=0, ay=0, bx=1, by=1,cx=0, cy=1, dx=1, dy=0):
+    a = slope * distToIntervalAB(pt, ax, ay, bx, by)
+    b = slope * distToIntervalAB(pt, cx, cy, dx, dy)
+    return bottom + min(a, b)

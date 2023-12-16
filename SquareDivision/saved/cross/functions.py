@@ -1,0 +1,1 @@
+cross_ABCD_kwargs = {'bottom':0.005,'slope':0.3,'ax':0.0, 'ay':0.0, 'bx':1.0, 'by':1.0, 'cx':1.0, "cy":0.0, 'dx':0.0, 'dy':1.0}

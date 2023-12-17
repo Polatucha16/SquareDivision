@@ -168,4 +168,4 @@ def distToIntervalAB(pt, ax=0, ay=0, bx=1, by=1):
 def cross_ABCD(pt, bottom=0, slope=1, ax=0, ay=0, bx=1, by=1,cx=0, cy=1, dx=1, dy=0):
     a = slope * distToIntervalAB(pt, ax, ay, bx, by)
     b = slope * distToIntervalAB(pt, cx, cy, dx, dy)
-    return bottom + min(a, b)
+    return max(bottom, min(a, b))

@@ -79,7 +79,7 @@ def draw_suspended_walls(ax: Axes, dir, sus_walls):
     return ax
 
 
-def draw_func(func_family: Callable, func_kwargs):
+def draw_func(func_family: Callable, func_kwargs, top=1):
     """
     Plot function of type
         ((2,) np.ndarray, kwargs) -> float
@@ -95,7 +95,7 @@ def draw_func(func_family: Callable, func_kwargs):
     fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
     ax.set_xlim3d(left=0, right=1)
     ax.set_ylim3d(bottom=0, top=1)
-    ax.set_zlim3d(bottom=0, top=1)
+    ax.set_zlim3d(bottom=0, top=top)
     ax.plot_surface(
         X, Y, Z, vmin=Z.min(), vmax=Z.max() + 0.1, rstride=1, cstride=1, cmap=cm.terrain
     )

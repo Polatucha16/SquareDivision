@@ -169,3 +169,6 @@ def cross_ABCD(pt, bottom=0, slope=1, ax=0, ay=0, bx=1, by=1,cx=0, cy=1, dx=1, d
     a = slope * distToIntervalAB(pt, ax, ay, bx, by)
     b = slope * distToIntervalAB(pt, cx, cy, dx, dy)
     return max(bottom, min(a, b))
+
+def dist_to_circle(pt, center=np.array([0.5, 0.5]), radius=0.25):
+    return np.abs(np.linalg.norm(pt - center) - radius)
